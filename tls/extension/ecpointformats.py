@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 # RFC4492
 
-from .util import *
+from tls.util import *
 from .extension import Extension
 
 FORMAT_IDS: dict[str, int] = {

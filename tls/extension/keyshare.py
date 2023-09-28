@@ -2,7 +2,7 @@
 # RFC8446
 
 from typing import NamedTuple
-from .util import *
+from tls.util import *
 from .extension import Extension
 from .supportedgroups import GROUP_IDS
 

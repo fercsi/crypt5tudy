@@ -10,7 +10,7 @@ from .extension.signaturealgorithms import SignatureAlgorithms
 from .extension.supportedgroups import SupportedGroups
 from .extension.supportedversions import SupportedVersions
 
-from .extension.unknown import Unknown
+from .extension.extension import UnknownExtension
 
 _EXTENSION_HANDLERS = {
      0: ServerName,

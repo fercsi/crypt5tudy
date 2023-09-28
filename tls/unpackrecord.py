@@ -2,9 +2,11 @@
 
 from .record import Record, UnknownRecord
 from .handshake import Handshake, UnknownHandshake
-from .hs_clienthello import ClientHello
-from .hs_serverhello import ServerHello
-from .util import *
+from .supported_handshakes import *
+from .supported_handshakes import _HANDSHAKE_HANDLERS
+#>from .hs_clienthello import ClientHello
+#>from .hs_serverhello import ServerHello
+#>from .util import *
 
 _RECORD_HANDLERS = {
 #>    20: ChangeCipherSpec,
@@ -12,19 +14,19 @@ _RECORD_HANDLERS = {
     22: Handshake,
 #>    23: ApplicationData,
     }
-_HANDSHAKE_HANDLERS = {
-    1: ClientHello,
-    2: ServerHello,
-#>    4: NewSessionTicket,
-#>    5: EndOfEarlyData,
-#>    8: EncryptedExtensions,
-#>    11: Certificate,
-#>    13: CertificateRequest,
-#>    15: CertificateVerify,
-#>    20: Finished,
-#>    24: KeyUpdate,
-#>    254: MessageHash,        
-    }
+#>_HANDSHAKE_HANDLERS = {
+#>    1: ClientHello,
+#>    2: ServerHello,
+#>#>    4: NewSessionTicket,
+#>#>    5: EndOfEarlyData,
+#>#>    8: EncryptedExtensions,
+#>#>    11: Certificate,
+#>#>    13: CertificateRequest,
+#>#>    15: CertificateVerify,
+#>#>    20: Finished,
+#>#>    24: KeyUpdate,
+#>#>    254: MessageHash,        
+#>    }
 
 def unpackRecord(raw: bytes) -> Record:
     recordType = unpackU8(raw, 0)

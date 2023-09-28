@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 # RFC5077
 
-from .util import *
+from tls.util import *
 from .extension import Extension
 
 class SessionTicket(Extension):

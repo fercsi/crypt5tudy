@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 # RFC8446
 
-from .util import *
+from tls.util import *
 from .extension import Extension
 
 VERSION_IDS: dict[str, int] = {

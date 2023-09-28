@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 # RFC7627 - no effect in TLS1.3
 
-from .util import *
+from tls.util import *
 from .extension import Extension
 
 class ExtendedMasterSecret(Extension):

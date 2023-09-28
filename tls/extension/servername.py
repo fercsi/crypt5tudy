@@ -2,7 +2,7 @@
 # RFC8446
 
 from typing import NamedTuple
-from .util import *
+from tls.util import *
 from .extension import Extension
 
 class ServerInfo(NamedTuple):

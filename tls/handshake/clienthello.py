@@ -3,7 +3,7 @@
 
 import hashlib
 import random
-from .util import *
+from tls.util import *
 from .handshake import Handshake
 
 CS_IDS = {

@@ -1,11 +1,11 @@
 #!/usr/bin/python3
 # RFC8446
 
-from .util import *
-from .record import Record
-from .extension import Extension
-from .supported_extensions import *
-from .supported_extensions import _EXTENSION_HANDLERS
+from tls.util import *
+from tls.record import Record
+from tls.extension import Extension
+from tls.supported_extensions import *
+from tls.supported_extensions import _EXTENSION_HANDLERS
 
 class Handshake(Record):
     def __init__(self):
@@ -46,7 +46,7 @@ class Handshake(Record):
             pos += len(extContent) + 4
             extension = _EXTENSION_HANDLERS.get(extType)
             if extension is None:
-                extension = Unknown(extType)
+                extension = UnknownExtension(extType)
             extension.unpack(raw)
             self.addExtension(extension)
 
