@@ -21,12 +21,16 @@ class Record:
         return b''
 
     def unpack(self, raw: bytes) -> None:
+        self.recordType = unpackU8(raw, 0)
         self.recordTLSVersion = unpackU16(raw, 1)
         rawContent = unpackBytes(raw, 3, 2)
         self.unpackRecordContent(rawContent)
 
     def packRecordContent(self, raw: bytes) -> None:
         pass
+
+    def __str__(self) -> str:
+        return self.represent()
 
 
 class UnknownRecord(Record):

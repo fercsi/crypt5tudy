@@ -30,8 +30,9 @@ class Handshake(Record):
     def unpackHandshakeContent(self, raw: bytes) -> None:
         pass
 
-    def addExtension(self, ext: Extension) -> None:
-        self.extensions.append(ext)
+    def addExtension(self, extension: Extension) -> None:
+        extension.handshakeType = self.handshakeType
+        self.extensions.append(extension)
 
     def packExtensions(self) -> bytes:
         exts = (ext.pack() for ext in self.extensions)
@@ -41,13 +42,16 @@ class Handshake(Record):
         pos = 0
         length = len(raw)
         while pos < length:
-            type = unpackU16(raw, pos)
-            extContent = unpackBytes(raw, pos+2, 2)
-            pos += len(extContent) + 4
+            extType = unpackU16(raw, pos)
+            extContent = raw[pos:4+pos+unpackU16(raw, pos+2)]
+            pos += len(extContent)
             extension = _EXTENSION_HANDLERS.get(extType)
-            if extension is None:
+            if extension is not None:
+                extension = extension()
+            else:
                 extension = UnknownExtension(extType)
-            extension.unpack(raw)
+            extension.handshakeType = self.handshakeType
+            extension.unpack(extContent)
             self.addExtension(extension)
 
 

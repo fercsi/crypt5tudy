@@ -28,5 +28,33 @@ class SupportedVersions(Extension):
                 if isinstance(g, str) else g for g in version)
         self.versions.extend(version)
 
-    def packExtensionContent(self):
-        return packU16List(self.versions, 1)
+    def packExtensionContent(self) -> bytes:
+        if self.handshakeType == 1:
+            return packU16List(self.versions, 1)
+        elif self.handshakeType == 2:
+            return packU16(self.versions[0])
+        else:
+            raise TypeError(f"Don't know, how to pack `SupportedVersion` for handshake type {self.handshakeType}")
+
+    def unpackExtensionContent(self, raw):
+        if self.handshakeType == 1:
+            self.versions = unpackU16List(raw, 0, 1)
+        elif self.handshakeType == 2:
+            self.versions = [unpackU16(raw, 0)]
+        else:
+            raise TypeError(f"Don't know, how to unpack `SupportedVersion` for handshake type {self.handshakeType}")
+
+    def represent(self, level: int = 0):
+        text = super().represent(level);
+        ind = '  '*level
+        revlut = {}
+        for k, v in VERSION_IDS.items():
+            if k[0] == 't':
+                revlut[v] = k
+        for v in self.versions:
+            t = revlut.get(v)
+            if t is not None:
+                text += ind + f'  - {t}\n'
+            else:
+                text += ind + f'  - unknown version {t:0>4x}\n'
+        return text

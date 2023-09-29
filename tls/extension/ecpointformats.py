@@ -28,3 +28,20 @@ class EcPointFormats(Extension):
 
     def packExtensionContent(self):
         return packU8List(self.formats, 1)
+
+    def unpackExtensionContent(self, raw):
+        self.formats = unpackU8List(raw, 0, 1)
+
+    def represent(self, level: int = 0):
+        text = super().represent(level);
+        ind = '  '*level
+        revlut = {}
+        for k, v in FORMAT_IDS.items():
+            revlut[v] = k
+        for v in self.formats:
+            t = revlut.get(v)
+            if t is not None:
+                text += ind + f'  - {t}\n'
+            else:
+                text += ind + f'  - unknown_{t:0>4x}\n'
+        return text

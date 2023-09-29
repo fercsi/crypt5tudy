@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 from .extension.ecpointformats import EcPointFormats
+from .extension.encryptthenmac import EncryptThenMAC
 from .extension.extendedmastersecret import ExtendedMasterSecret
 from .extension.keyshare import KeyShare
 from .extension.pskkeyexchangemodes import PskKeyExchangeModes
@@ -17,6 +18,7 @@ _EXTENSION_HANDLERS = {
     10: SupportedGroups,
     11: EcPointFormats,
     13: SignatureAlgorithms,
+    22: EncryptThenMAC,
     23: ExtendedMasterSecret,
     35: SessionTicket,
     43: SupportedVersions,

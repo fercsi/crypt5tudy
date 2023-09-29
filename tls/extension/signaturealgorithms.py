@@ -53,3 +53,20 @@ class SignatureAlgorithms(Extension):
 
     def packExtensionContent(self):
         return packU16List(self.algorithms, 2)
+
+    def unpackExtensionContent(self, raw):
+        self.algorithms = unpackU16List(raw, 0, 2)
+
+    def represent(self, level: int = 0):
+        text = super().represent(level);
+        ind = '  '*level
+        revlut = {}
+        for k, v in ALGORITHM_IDS.items():
+            revlut[v] = k
+        for v in self.algorithms:
+            t = revlut.get(v)
+            if t is not None:
+                text += ind + f'  - {t}\n'
+            else:
+                text += ind + f'  - unknown algorithm {t:0>4x}\n'
+        return text

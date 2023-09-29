@@ -23,3 +23,19 @@ class ServerName(Extension):
     def packExtensionContent(self):
         content = (packU8(n.type) + packStr(n.name, 2) for n in self.names)
         return packBytesList(content, 2)
+
+    def unpackExtensionContent(self, raw):
+        srvRawList = unpackBytesList(raw, 0, 0, 2)
+        for srvRaw in srvRawList:
+            srvType = unpackU8(srvRaw, 0)
+            srvName = unpackStr(srvRaw, 1, 2)
+            self.add(srvName, srvType)
+
+    def represent(self, level: int = 0):
+        text = super().represent(level);
+        ind = '  '*level
+        for v in self.names:
+            type = 'host_name' if v.type == 0 else f'unknown type {v.type:0>2x}';
+            text += ind + f'  - type: {type}\n'
+            text += ind + f'    name: {v.name}\n'
+        return text

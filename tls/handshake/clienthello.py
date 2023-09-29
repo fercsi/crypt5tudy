@@ -45,18 +45,44 @@ class ClientHello(Handshake):
         packed = tlsver + self.random + self.sessionId + cipSuite + cmprss + exts
         return packed
 
-    def str(self):
-        randomStr = "    " + self.random.hex() + "\n"
-        sessionStr = "    " + self.sessionId.hex() + "\n"
-        cipsuiteStr = "    " + ', '.join(f'{n:0>4x}' for n in self.cipherSuite) + "\n"
-        cmprssStr = "    " + ', '.join(f'{n:0>4x}' for n in self.compression) + "\n"
-        extStr = "    -\n"
+    def unpackHandshakeContent(self, raw):
+        pos = 0
+        self.clientHelloTLSVersion = unpackU16(raw, pos)
+        pos += 2
+        self.random = raw[pos:pos+31]
+        pos += 32
+        self.sessionId = unpackBytes(raw, pos, 1)
+        pos += 1 + len(self.sessionId)
+        self.cipherSuite = unpackU16List(raw, pos, 2)
+        pos += 2 + len(self.cipherSuite) * 2
+        self.compression = unpackU8List(raw, pos, 1)
+        pos += 1 + len(self.compression)
+        rawexts = unpackBytes(raw, pos, 2)
+        self.unpackExtensions(rawexts)
+
+    def represent(self):
+        randomStr = self.random.hex() + "\n"
+        sessionStr = self.sessionId.hex() + "\n"
+        revlut = {}
+        for k, v in CS_IDS.items():
+            revlut[v] = k
+        cipsuiteStr = ""
+        for cs in self.cipherSuite:
+            cstxt = revlut.get(cs) or f'unknown cipher suite {cs:0>4x}'
+            cipsuiteStr += f"    - {cstxt}\n" 
+        cmprssStr = ""
+        for c in self.compression:
+            cmprssStr += "    - " \
+                + ("uncompressed" if c == 0 else "unknown_{c:0>2x}") + "\n"
+        extStr = ''
+        for ext in self.extensions:
+            extStr += ext.represent(2)
         return "Handshake - client_hello\n"       \
-             + "  random:\n" + randomStr          \
-             + "  session ID:\n" + sessionStr     \
-             + "  cipher suites:\n" + cipsuiteStr \
-             + "  compressions:\n" + cmprssStr    \
-             + "  extensions:\n" + extStr
+             + "  Random: " + randomStr           \
+             + "  SessionID: " + sessionStr      \
+             + "  CipherSuite:\n" + cipsuiteStr \
+             + "  Compression:\n" + cmprssStr     \
+             + "  Extensions:\n" + extStr
 
     def __str__(self) -> str:
-        return self.str()
+        return self.represent()

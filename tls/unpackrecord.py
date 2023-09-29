@@ -4,9 +4,7 @@ from .record import Record, UnknownRecord
 from .handshake import Handshake, UnknownHandshake
 from .supported_handshakes import *
 from .supported_handshakes import _HANDSHAKE_HANDLERS
-#>from .hs_clienthello import ClientHello
-#>from .hs_serverhello import ServerHello
-#>from .util import *
+from .util import *
 
 _RECORD_HANDLERS = {
 #>    20: ChangeCipherSpec,
@@ -31,7 +29,8 @@ _RECORD_HANDLERS = {
 def unpackRecord(raw: bytes) -> Record:
     recordType = unpackU8(raw, 0)
     recordTLSVersion = unpackU16(raw, 1)
-    recordContent = unpackBytes(raw, 3, 2)
+    recordContent = raw[0:5+unpackU16(raw, 3)]
+#>    recordContent = unpackBytes(raw, 3, 2)
     recordHandler = _RECORD_HANDLERS.get(recordType)
     if recordHandler is None:
         record = UnknownRecord(recordType)

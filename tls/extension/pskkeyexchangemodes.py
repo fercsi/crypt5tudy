@@ -26,3 +26,20 @@ class PskKeyExchangeModes(Extension):
 
     def packExtensionContent(self):
         return packU8List(self.kexmodes, 1)
+
+    def unpackExtensionContent(self, raw):
+        self.kexmodes = unpackU8List(raw, 0, 1)
+
+    def represent(self, level: int = 0):
+        text = super().represent(level);
+        ind = '  '*level
+        revlut = {}
+        for k, v in KEXMODE_IDS.items():
+            revlut[v] = k
+        for v in self.kexmodes:
+            t = revlut.get(v)
+            if t is not None:
+                text += ind + f'  - {t}\n'
+            else:
+                text += ind + f'  - unknown kexmode {t:0>4x}\n'
+        return text
