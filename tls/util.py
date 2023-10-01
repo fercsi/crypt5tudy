@@ -1,10 +1,10 @@
 #!/usr/bin/python3
 
 import struct
-from random import randint
+from secrets import token_bytes
 
 def randomBytes(size: int) -> bytes:
-    return bytes(randint(0,255) for _ in range(size))
+    return token_bytes(size)
 
 # Pack constructs
 
