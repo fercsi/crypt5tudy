@@ -1,63 +1,101 @@
 #!/usr/bin/python3
 
-class Modular:
-    order: int
-    def __init__(self, order):
-        self.order = order
+from functools import total_ordering
 
-    def add(self, a: int, b: int):
-        return (a + b) % self.order
+@total_ordering
+def Polynomial(p: int|list[int]):
+    class _P:
+        p: int
+        value: int
+        def __init__(self, value):
+            self.value = value
 
-    def mul(self, a: int, b: int):
-        return (a * b) % self.order
+        def __int__(self) -> int:
+            return self.value
 
-class Polynomial(GFMethod):
-    def __init__(self, order: int, generator: int):
-        self.order = order
-        self.generator = generator
-        pass
+        def __repr__(self) -> str:
+            return repr(self.value)
 
-class GaloisField:
-    order: int
-    method: GFMethod
+        def __format__(self, fmt: str) -> str:
+            return format(self.value, fmt)
 
-    def __init__(self, order: int, *, method = '', generator = 0):
-        self.order = order
-        if method == '':
-            if order & (order - 1) == 0:
-                method = 'poly'
+        def __eq__(self, rhs) -> bool:
+            if isinstance(rhs, _P):
+                v = rhs.value
             else:
-                method = 'mod'
-        if method == 'poly':
-            self.method = Polynomial(order, generator)
-        else:
-            self.method = Modular(order)
+                v = rhs
+            return self.value == v
 
-class GFValue:
-    field: GaloisField
-    value: int
-    def __init__(self, field: GaloisField, value: int = 0):
-        self.field = field
-        self.value = value
+        def __lt__(self, rhs) -> bool:
+            if isinstance(rhs, _P):
+                v = rhs.value
+            else:
+                v = rhs
+            return self.value < v
 
-    def set(self, value: int):
-        self.value = value
+        def __neg__(self):
+            return _P(self.value)
 
-    def __add__(self, oth):
-        result = self.field.method.add(self.value, oth.value)
-        return GFValue(self.field, result)
+        def __add__(self, rhs):
+            return _P(self.value ^ rhs.value)
 
-    def __mul__(self, oth):
-        result = self.field.method.mul(self.value, oth.value)
-        return GFValue(self.field, result)
+        def __sub__(self, rhs):
+            return _P(self.value ^ rhs.value)
 
-    def __str__(self):
-        return str(self.value)
+        def __mul__(self, rhs):
+            value1 = self.value
+            value2 = rhs.value
+            result = 0
+            mask = self.mask
+            p = self.p
+            while value2:
+                if value2 & 1:
+                    result ^= value1
+                value1 <<= 1
+                if value1 & mask > 0:
+                    value1 ^= p
+                value2 >>= 1
+            return _P(result)
 
+        def __rmul__(self, lhs: int):
+            return _P(lhs) * self
 
-f = GaloisField(7)
-v1 = GFValue(f, 5)
-v2 = GFValue(f, 4)
-v3 = GFValue(f, 3)
-v = (v1 + v2) * v3
-print(v1, v2, v3, v)
+        def inverse(self):
+            if (self.value == 0):
+                raise ZeroDivisionError('division by zero')
+            return self ** (self.mask - 2)
+
+        def __truediv__(self, rhs):
+            return self * rhs.inverse()
+
+        def __rtruediv__(self, lhs: int):
+            return _P(lhs) * self.inverse()
+
+        def __pow__(self, rhs: int):
+            if rhs == 0:
+                # Note: following pythonic way, 0**0 = 1
+                return _P(1)
+            value1 = _P(self.value)
+            value2 = rhs
+            result = _P(1)
+            mask = self.mask
+            p = self.p
+            while value2:
+                if value2 & 1:
+                    result = result * value1
+                value1 = value1 * value1
+                value2 >>= 1
+            return result
+
+    if isinstance(p, list):
+        mask = 1<<max(p)
+        p = sum(1<<n for n in p)
+    else:
+        m = 0
+        p2 = p>>1
+        while p2:
+            m += 1
+            p2 >>= 1
+    _P.p = p
+    _P.mask = mask
+    return _P
