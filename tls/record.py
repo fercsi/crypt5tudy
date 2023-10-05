@@ -26,7 +26,7 @@ class Record:
         rawContent = unpackBytes(raw, 3, 2)
         self.unpackRecordContent(rawContent)
 
-    def packRecordContent(self, raw: bytes) -> None:
+    def unpackRecordContent(self, raw: bytes) -> None:
         pass
 
     def __str__(self) -> str:
@@ -42,5 +42,9 @@ class UnknownRecord(Record):
     def packRecordContent(self) -> bytes:
         return self.content
 
-    def packRecordContent(self, raw: bytes) -> None:
+    def unpackRecordContent(self, raw: bytes) -> None:
         self.content = raw
+
+    def represent(self) -> str:
+        return f'UnknownRecord_{self.recordType}:\n' \
+            + f'  Content: {self.content.hex()}\n'

@@ -75,7 +75,7 @@ class ServerHello(Handshake):
         for ext in self.extensions:
             extStr += ext.represent(2)
 
-        return "Handshake - server_hello\n"       \
+        return "Handshake-server_hello:\n"       \
              + f"  Random: {randomStr}\n"         \
              + f"  SessionID: {sessionStr}\n"     \
              + f"  CipherSuite: {cipsuiteStr}\n"  \

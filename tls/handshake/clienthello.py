@@ -77,7 +77,8 @@ class ClientHello(Handshake):
         extStr = ''
         for ext in self.extensions:
             extStr += ext.represent(2)
-        return "Handshake - client_hello\n"       \
+
+        return "Handshake-client_hello:\n"       \
              + "  Random: " + randomStr           \
              + "  SessionID: " + sessionStr      \
              + "  CipherSuite:\n" + cipsuiteStr \

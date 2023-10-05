@@ -3,4 +3,8 @@
 from .supported_handshakes import *
 from .supported_extensions import *
 
-from .unpackrecord import unpackRecord
+from .changecipherspec import ChangeCipherSpec
+from .alert import Alert
+from .applicationdata import ApplicationData
+
+from .unpackrecord import unpackRecord, unpackRecords
