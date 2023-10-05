@@ -3,10 +3,13 @@
 from functools import total_ordering
 
 @total_ordering
-def Polynomial(p: int|list[int]):
+def Polynomial(q: int|list[int], *, reverse = False):
     class _P:
-        p: int
         value: int
+        degree: int
+        reverse: bool
+        q: int
+        mask: int
         def __init__(self, value):
             self.value = value
 
@@ -42,20 +45,42 @@ def Polynomial(p: int|list[int]):
         def __sub__(self, rhs):
             return _P(self.value ^ rhs.value)
 
-        def __mul__(self, rhs):
+        def _mul(self, rhs):
             value1 = self.value
             value2 = rhs.value
             result = 0
             mask = self.mask
-            p = self.p
+            q = self.q
             while value2:
                 if value2 & 1:
                     result ^= value1
                 value1 <<= 1
-                if value1 & mask > 0:
-                    value1 ^= p
+                if value1 & mask:
+                    value1 ^= q
                 value2 >>= 1
             return _P(result)
+
+        def _revmul(self, rhs):
+            value1 = self.value
+            value2 = rhs.value
+            result = 0
+            mask = self.mask
+            chkmask = mask + 1 >> 1
+            q = self.q
+            while value2:
+                if value2 & chkmask:
+                    result ^= value1
+                if value1 & 1:
+                    value1 ^= q # degree+1 bits!
+                value1 >>= 1
+                value2 = (value2 << 1) & mask
+            return _P(result)
+
+        def __mul__(self, rhs):
+            if self.reverse:
+                return self._revmul(rhs)
+            else:
+                return self._mul(rhs)
 
         def __rmul__(self, lhs: int):
             return _P(lhs) * self
@@ -78,8 +103,6 @@ def Polynomial(p: int|list[int]):
             value1 = _P(self.value)
             value2 = rhs
             result = _P(1)
-            mask = self.mask
-            p = self.p
             while value2:
                 if value2 & 1:
                     result = result * value1
@@ -87,15 +110,33 @@ def Polynomial(p: int|list[int]):
                 value2 >>= 1
             return result
 
-    if isinstance(p, list):
-        mask = 1<<max(p)
-        p = sum(1<<n for n in p)
+        def __xor__(self, rhs):
+            return _P(self.value ^ rhs.value)
+
+    if isinstance(q, list):
+        degree = max(q)
     else:
-        m = 0
-        p2 = p>>1
-        while p2:
-            m += 1
-            p2 >>= 1
-    _P.p = p
+        degree = 0
+        q2 = q>>1
+        while q2:
+            degree += 1
+            q2 >>= 1
+
+    if not reverse:
+        mask = 1 << degree
+        if isinstance(q, list):
+            q = sum(1<<n for n in q)
+    else:
+        if isinstance(q, list):
+            # note: degree+1 bits!
+            q = sum(1<<(degree-n) for n in q)
+            q ^= 1
+        else:
+            degree += 1
+        mask = (1 << degree) - 1
+
+    _P.q = q
+    _P.degree = degree
     _P.mask = mask
+    _P.reverse = reverse
     return _P
