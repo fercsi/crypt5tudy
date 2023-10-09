@@ -20,4 +20,4 @@ class ApplicationData(Record):
         self.cipherText = raw[:-16]
 
     def represent(self) -> str:
-        return f'ApplicationData: {self.cipherText.hex()}\n'
+        return f'ApplicationData:\n  CipherText: {self.cipherText.hex()}\n'
