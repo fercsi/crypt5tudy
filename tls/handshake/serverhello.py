@@ -1,8 +1,6 @@
 #!/usr/bin/python3
 # RFC8446
 
-import hashlib
-import random
 from tls.util import *
 from .handshake import Handshake
 
@@ -55,8 +53,8 @@ class ServerHello(Handshake):
         pos += 2
         self.compression = unpackU8(raw, pos)
         pos += 1
-        rawexts = unpackBytes(raw, pos, 2)
-        self.unpackExtensions(rawexts)
+#>        rawexts = unpackBytes(raw, pos, 2)
+        self.unpackExtensions(raw, pos)
 
     def represent(self):
         randomStr = self.random.hex()

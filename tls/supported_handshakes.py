@@ -2,6 +2,10 @@
 
 from .handshake.clienthello import ClientHello
 from .handshake.serverhello import ServerHello
+from .handshake.encryptedextensions import EncryptedExtensions
+from .handshake.certificate import Certificate
+from .handshake.certificateverify import CertificateVerify
+from .handshake.finished import Finished
 
 from .handshake import Handshake, UnknownHandshake
 
@@ -10,11 +14,11 @@ _HANDSHAKE_HANDLERS = {
     2: ServerHello,
 #>    4: NewSessionTicket,
 #>    5: EndOfEarlyData,
-#>    8: EncryptedExtensions,
-#>    11: Certificate,
+    8: EncryptedExtensions,
+    11: Certificate,
 #>    13: CertificateRequest,
-#>    15: CertificateVerify,
-#>    20: Finished,
+    15: CertificateVerify,
+    20: Finished,
 #>    24: KeyUpdate,
 #>    254: MessageHash,        
     }

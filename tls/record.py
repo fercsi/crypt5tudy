@@ -7,7 +7,7 @@ from .util import *
 class Record:
     def __init__(self):
         self.recordType = 0
-        self.recordTLSVersion = 0x0301
+        self.recordTLSVersion = 0x0303
 
     def pack(self) -> bytes:
         type = bytes([self.recordType])
@@ -21,6 +21,7 @@ class Record:
         return b''
 
     def unpack(self, raw: bytes) -> None:
+        self.rawContent = raw
         self.recordType = unpackU8(raw, 0)
         self.recordTLSVersion = unpackU16(raw, 1)
         rawContent = unpackBytes(raw, 3, 2)

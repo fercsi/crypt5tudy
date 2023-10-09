@@ -17,6 +17,9 @@ def packU8(content: int) -> bytes:
 def packU16(content: int) -> bytes:
     return content.to_bytes(2, 'big')
 
+def packU24(content: int) -> bytes:
+    return content.to_bytes(3, 'big')
+
 def packStr(content: str, size: int) -> bytes:
     data = content.encode()
     return packInt(len(data), size) + data
@@ -54,6 +57,9 @@ def unpackU8(raw: bytes, pos: int) -> int:
 
 def unpackU16(raw: bytes, pos: int) -> int:
     return int.from_bytes(raw[pos:pos+2], 'big')
+
+def unpackU24(raw: bytes, pos: int) -> int:
+    return int.from_bytes(raw[pos:pos+3], 'big')
 
 def unpackStr(raw: bytes, pos: int, size: int) -> str:
     length = unpackInt(raw, pos, size)

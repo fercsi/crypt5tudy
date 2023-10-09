@@ -14,7 +14,10 @@ class ApplicationData(Record):
         return self.cipherText
 
     def unpackRecordContent(self, raw: bytes) -> None:
-        self.cipherText = raw
+#>        self.cipherText = raw
+        self.authData = self.rawContent[:5]
+        self.authTag = raw[-16:]
+        self.cipherText = raw[:-16]
 
     def represent(self) -> str:
         return f'ApplicationData: {self.cipherText.hex()}\n'

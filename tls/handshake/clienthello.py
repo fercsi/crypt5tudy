@@ -1,8 +1,6 @@
 #!/usr/bin/python3
 # RFC8446
 
-import hashlib
-import random
 from tls.util import *
 from .handshake import Handshake
 
@@ -19,6 +17,7 @@ CS_IDS = {
 class ClientHello(Handshake):
     def __init__(self, cipherSuite: list|None = None):
         super().__init__()
+        self.recordTLSVersion = 0x0301 # for rooter compatibility reasons!
         self.handshakeType = 1
         self.clientHelloTLSVersion = 0x0303
         self.random = randomBytes(32)
@@ -57,8 +56,8 @@ class ClientHello(Handshake):
         pos += 2 + len(self.cipherSuite) * 2
         self.compression = unpackU8List(raw, pos, 1)
         pos += 1 + len(self.compression)
-        rawexts = unpackBytes(raw, pos, 2)
-        self.unpackExtensions(rawexts)
+#>        rawexts = unpackBytes(raw, pos, 2)
+        self.unpackExtensions(raw, pos)
 
     def represent(self):
         randomStr = self.random.hex() + "\n"
