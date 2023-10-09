@@ -33,9 +33,6 @@ def Modular(p: int):
                 v = rhs
             return self.value < v
 
-#>        def __ne__(self, rhs) -> bool:
-#>            return not self.__eq__(rhs)
-
         def __neg__(self):
             return _M((-self.value) % _M.p)
 
@@ -53,7 +50,6 @@ def Modular(p: int):
 
         def _inverse(self):
             return pow(self.value, -1, _M.p)
-#>            https://stackoverflow.com/questions/4798654/modular-multiplicative-inverse-function-in-python
 
         def inverse(self):
             return _M(self._inverse())
@@ -68,7 +64,7 @@ def Modular(p: int):
             return _M(pow(self.value, rhs, _M.p))
 
         def sqrt(self):
-            # https://www.rieselprime.de/ziki/Modular_square_root
+            # ref: https://www.rieselprime.de/ziki/Modular_square_root
             if self.value == 0:
                 return [_M(0)]
             m: int = self.p
