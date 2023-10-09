@@ -20,6 +20,7 @@ class HKDF:
         self.hashSize = self.hashFunction().digest_size
 
     def hmacHash(self, key: bytes, data: bytes) -> bytes:
+        # RFC2104
         return hmac.new(key, data, self.hashFunction).digest()
 
     def extract(self, salt: bytes|None, ikm: bytes) -> bytes:

@@ -24,6 +24,7 @@ class CryptoSuite:
         else:
             raise NotImplementedError(f'Encryption {self.cipherSuite.encryption} is not implemented')
         self.keyLength = self.cipherSuite.kLen
+        self.hashLength = self.hashFunction(b'').digest_size
 
     def setMyKey(self, key: bytes) -> None:
         self.aead.setMyKey(key)
