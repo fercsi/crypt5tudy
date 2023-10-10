@@ -3,7 +3,7 @@
 
 from tls.util import *
 from .handshake import Handshake
-from tls.extension import Extension, packExtensionList, unpackExtensionList
+from tls.extension import Extension, pack_extension_list, unpack_extension_list
 
 _CERTTYPE_IDS = {
     'x509': 0,
@@ -11,87 +11,87 @@ _CERTTYPE_IDS = {
     }
 
 class Certificate(Handshake):
-    def __init__(self, certificateType: int|str = 0):
+    def __init__(self, certificate_type: int|str = 0):
         super().__init__()
-        self.handshakeType = 11
-        self.encryptedExtensionsTLSVersion = 0x0303
-        self.setCertificateType(certificateType)
-        self.certificateEntries = []
+        self.handshake_type = 11
+        self.encrypted_extensions_tlsversion = 0x0303
+        self.set_certificate_type(certificate_type)
+        self.certificate_entries = []
 
-    def setCertificateType(self, certificateType: int|str) -> None:
-        if isinstance(certificateType, str):
-            certificateType = _CERTTYPE_IDS.get(certificateType.lower())
-            if certificateType is None:
+    def set_certificate_type(self, certificate_type: int|str) -> None:
+        if isinstance(certificate_type, str):
+            certificate_type = _CERTTYPE_IDS.get(certificate_type.lower())
+            if certificate_type is None:
                 raise NotImplementedError("Certificate type not supported")
-        self.certificateType = certificateType
+        self.certificate_type = certificate_type
 
-    def packHandshakeContent(self):
-        crContext = packBytes(self.certificateRequestContext, 1)
-        ents = (ent.pack() for ent in self.certificateEntries)
-        return crContext + packBytesList(ents, 3)
+    def pack_handshake_content(self):
+        cr_context = pack_bytes(self.certificate_request_context, 1)
+        ents = (ent.pack() for ent in self.certificate_entries)
+        return cr_context + pack_bytes_list(ents, 3)
 
-    def unpackHandshakeContent(self, raw):
+    def unpack_handshake_content(self, raw):
         pos = 0
-        self.certificateRequestContext = unpackBytes(raw, pos, 1)
-        pos += 1 + len(self.certificateRequestContext)
-        endpos = pos + 3 + unpackU24(raw, pos)
+        self.certificate_request_context = unpack_bytes(raw, pos, 1)
+        pos += 1 + len(self.certificate_request_context)
+        endpos = pos + 3 + unpack_u24(raw, pos)
         pos += 3
         while pos < endpos:
-            entry = CertificateEntry(self.certificateType)
+            entry = CertificateEntry(self.certificate_type)
             start = pos
-            pos += 3 + unpackU24(raw, pos)
-            pos += 3 + unpackU24(raw, pos)
+            pos += 3 + unpack_u24(raw, pos)
+            pos += 3 + unpack_u24(raw, pos)
             entry.unpack(raw[start:pos])
-            self.certificateEntries.append(entry)
-#>        certificateList = unpackByteList(raw, pos, 3, 
-#>        rawexts = unpackBytes(raw, pos, 2)
-#>        self.unpackExtensions(rawexts)
+            self.certificate_entries.append(entry)
+#>        certificate_list = unpack_byte_list(raw, pos, 3, 
+#>        rawexts = unpack_bytes(raw, pos, 2)
+#>        self.unpack_extensions(rawexts)
 
     def represent(self, level: int = 0):
-        crc = '~' if self.certificateRequestContext == b'' else self.certificateRequestContext.hex()
-        ceStr = ''
-        for entry in self.certificateEntries:
-            ceStr += entry.represent(level + 2)
+        crc = '~' if self.certificate_request_context == b'' else self.certificate_request_context.hex()
+        ce_str = ''
+        for entry in self.certificate_entries:
+            ce_str += entry.represent(level + 2)
         return "Handshake-certificate:\n"       \
              + f"  CertificateRequestContent: {crc}\n" \
-             + f"  CertificateEntries:\n" + ceStr
+             + f"  CertificateEntries:\n" + ce_str
 
 class CertificateEntry:
-    certificateType: int
-    certData: bytes|None # X509
-    keyInfo: bytes|None # RawPublicKey, RFC7250
+    certificate_type: int
+    cert_data: bytes|None # X509
+    key_info: bytes|None # RawPublicKey, RFC7250
     extensions: list
 
-    def __init__(self, certificateType: int):
-        self.certificateType = certificateType
-        self.certData = None
-        self.keyInfo = None
+    def __init__(self, certificate_type: int):
+        self.certificate_type = certificate_type
+        self.cert_data = None
+        self.key_info = None
         self.extensions = []
 
     def pack(self) -> bytes:
-        c = self.certData if self.certData else self.keyInfo
-        content = packBytes(c, 3)
-        exts = packExtensionList(self.extensions, 3)
+        c = self.cert_data if self.cert_data else self.key_info
+        content = pack_bytes(c, 3)
+        exts = pack_extension_list(self.extensions, 3)
         packed = content + exts
         return packed
 
     def unpack(self, raw: bytes) -> None:
-        content = unpackBytes(raw, 0, 3)
-        if self.certificateType == 0:
-            self.certData = content
+        content = unpack_bytes(raw, 0, 3)
+        if self.certificate_type == 0:
+            self.cert_data = content
         else:
-            self.keyInfo = content
+            self.key_info = content
         pos = 3 + len(content)
-        self.extensions = unpackExtensionList(raw, pos, 8, 3)
+        self.extensions = unpack_extension_list(raw, pos, 8, 3)
 
     def represent(self, level: int = 0) -> str:
         ind = '  '*level
-        if self.certData is not None:
-            text = ind + f'- CertData: {self.certData.hex()}\n'
-        elif self.keyInfo is not None:
-            text = ind + f'- ASN1_subjectPublicKeyInfo: {self.keyInfo.hex()}\n'
-        extStr = ''
+        if self.cert_data is not None:
+            text = ind + f'- CertData: {self.cert_data.hex()}\n'
+        elif self.key_info is not None:
+            text = ind + f'- ASN1_subjectPublicKeyInfo: {self.key_info.hex()}\n'
+        ext_str = ''
         for ext in self.extensions:
-            extStr += ext.represent(level + 2)
+            ext_str += ext.represent(level + 2)
         return text \
-             + ind + "  Extensions:\n" + extStr
+             + ind + "  Extensions:\n" + ext_str

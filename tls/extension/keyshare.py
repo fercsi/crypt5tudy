@@ -13,7 +13,7 @@ class KeyInfo(NamedTuple):
 class KeyShare(Extension):
     def __init__(self, key: bytes|None = None, method: str|int|None = None):
         super().__init__()
-        self.extensionType = 51
+        self.extension_type = 51
         self.keys = []
         if key is not None:
             if method is None:
@@ -25,27 +25,27 @@ class KeyShare(Extension):
             method = GROUP_IDS[method]
         self.keys.append(KeyInfo(key, method))
 
-    def packExtensionContent(self):
-        if self.handshakeType == 1:
-            content = (packU16(n.method) + packBytes(n.key, 2) for n in self.keys)
-            return packBytesList(content, 2)
-        elif self.handshakeType == 2:
+    def pack_extension_content(self):
+        if self.handshake_type == 1:
+            content = (pack_u16(n.method) + pack_bytes(n.key, 2) for n in self.keys)
+            return pack_bytes_list(content, 2)
+        elif self.handshake_type == 2:
             key = self.keys[0]
-            return packU16(key.method) + packBytes(key.key, 2)
+            return pack_u16(key.method) + pack_bytes(key.key, 2)
         else:
-            raise TypeError(f"Don't know, how to pack `KeyShare` for handshake type {self.handshakeType}")
+            raise TypeError(f"Don't know, how to pack `KeyShare` for handshake type {self.handshake_type}")
 
-    def unpackExtensionContent(self, raw):
-        if self.handshakeType == 1:
-            keyRawList = unpackBytesList(raw, 0, 0, 2)
-        elif self.handshakeType == 2:
-            keyRawList = [raw]
+    def unpack_extension_content(self, raw):
+        if self.handshake_type == 1:
+            key_raw_list = unpack_bytes_list(raw, 0, 0, 2)
+        elif self.handshake_type == 2:
+            key_raw_list = [raw]
         else:
-            raise TypeError(f"Don't know, how to unpack `SupportedVersion` for handshake type {self.handshakeType}")
-        for keyRaw in keyRawList:
-            keymethod = unpackU16(keyRaw, 0)
-            keyData = unpackBytes(keyRaw, 2, 2)
-            self.add(keyData, keymethod)
+            raise TypeError(f"Don't know, how to unpack `SupportedVersion` for handshake type {self.handshake_type}")
+        for key_raw in key_raw_list:
+            keymethod = unpack_u16(key_raw, 0)
+            key_data = unpack_bytes(key_raw, 2, 2)
+            self.add(key_data, keymethod)
 
     def represent(self, level: int = 0):
         text = super().represent(level);

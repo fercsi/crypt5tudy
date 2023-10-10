@@ -5,18 +5,18 @@ from tls.util import *
 from .handshake import Handshake
 
 class Finished(Handshake):
-    def __init__(self, verifyData: bytes = b''):
+    def __init__(self, verify_data: bytes = b''):
         super().__init__()
-        self.handshakeType = 20
-        self.verifyData = verifyData
+        self.handshake_type = 20
+        self.verify_data = verify_data
 
-    def packHandshakeContent(self):
-        return self.verifyData
+    def pack_handshake_content(self):
+        return self.verify_data
 
-    def unpackHandshakeContent(self, raw):
-        self.verifyData = raw
+    def unpack_handshake_content(self, raw):
+        self.verify_data = raw
 
     def represent(self):
-        verifyData = self.verifyData.hex()
+        verify_data = self.verify_data.hex()
         return "Handshake-finished:\n"       \
-             + f"  VerifyData: {verifyData}\n"
+             + f"  VerifyData: {verify_data}\n"

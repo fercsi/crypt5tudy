@@ -4,23 +4,23 @@ from abc import ABC, abstractmethod
 
 class Encryption(ABC):
     def __init__(self, key: bytes = b''):
-        self.setKey(key)
+        self.set_key(key)
 
-    def setKey(self, key: bytes) -> None:
+    def set_key(self, key: bytes) -> None:
         self.key = key
 
     @abstractmethod
-    def encrypt(self, plainText: bytes) -> bytes:
+    def encrypt(self, plain_text: bytes) -> bytes:
         pass
 
     @abstractmethod
-    def decrypt(self, cipherText: bytes) -> bytes:
+    def decrypt(self, cipher_text: bytes) -> bytes:
         pass
 
 class NoEncryption(Encryption):
 
-    def encrypt(self, plainText: bytes) -> bytes:
-        return plainText
+    def encrypt(self, plain_text: bytes) -> bytes:
+        return plain_text
 
-    def decrypt(self, cipherText: bytes) -> bytes:
-        return cipherText
+    def decrypt(self, cipher_text: bytes) -> bytes:
+        return cipher_text

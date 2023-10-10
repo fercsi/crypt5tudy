@@ -16,7 +16,7 @@ VERSION_IDS: dict[str, int] = {
 class SupportedVersions(Extension):
     def __init__(self, versions: list[str|int]|None = None):
         super().__init__()
-        self.extensionType = 43
+        self.extension_type = 43
         self.versions = []
         if versions:
             self.add(versions)
@@ -28,21 +28,21 @@ class SupportedVersions(Extension):
                 if isinstance(g, str) else g for g in version)
         self.versions.extend(version)
 
-    def packExtensionContent(self) -> bytes:
-        if self.handshakeType == 1:
-            return packU16List(self.versions, 1)
-        elif self.handshakeType == 2:
-            return packU16(self.versions[0])
+    def pack_extension_content(self) -> bytes:
+        if self.handshake_type == 1:
+            return pack_u16_list(self.versions, 1)
+        elif self.handshake_type == 2:
+            return pack_u16(self.versions[0])
         else:
-            raise TypeError(f"Don't know, how to pack `SupportedVersion` for handshake type {self.handshakeType}")
+            raise TypeError(f"Don't know, how to pack `SupportedVersion` for handshake type {self.handshake_type}")
 
-    def unpackExtensionContent(self, raw):
-        if self.handshakeType == 1:
-            self.versions = unpackU16List(raw, 0, 1)
-        elif self.handshakeType == 2:
-            self.versions = [unpackU16(raw, 0)]
+    def unpack_extension_content(self, raw):
+        if self.handshake_type == 1:
+            self.versions = unpack_u16_list(raw, 0, 1)
+        elif self.handshake_type == 2:
+            self.versions = [unpack_u16(raw, 0)]
         else:
-            raise TypeError(f"Don't know, how to unpack `SupportedVersion` for handshake type {self.handshakeType}")
+            raise TypeError(f"Don't know, how to unpack `SupportedVersion` for handshake type {self.handshake_type}")
 
     def represent(self, level: int = 0):
         text = super().represent(level);

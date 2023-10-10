@@ -15,67 +15,67 @@ CS_IDS = {
     }
 
 class ServerHello(Handshake):
-    def __init__(self, cipherSuite: int = 0):
+    def __init__(self, cipher_suite: int = 0):
         super().__init__()
-        self.handshakeType = 1
-        self.serverHelloTLSVersion = 0x0303
-        self.random = randomBytes(32)
+        self.handshake_type = 1
+        self.server_hello_tlsversion = 0x0303
+        self.random = random_bytes(32)
         # Session ID is not used in TLS1.3, but for security reasons don't leak
         # information:
-        self.sessionId = packBytes(randomBytes(32), 1)
-        self.cipherSuite = cipherSuite
+        self.session_id = pack_bytes(random_bytes(32), 1)
+        self.cipher_suite = cipher_suite
         self.compression = 0 # TLS1.3 does not allow compression
 
-    def addCipherSuite(self, cipherSuite: str|int|list) -> None:
-        if not isinstance(cipherSuite, list):
-            cipherSuite = [cipherSuite]
-        cipherSuite = (CS_IDS[g.replace('-', '_').upper()]
-                if isinstance(g, str) else g for g in cipherSuite)
-        self.cipherSuite.extend(cipherSuite)
+    def add_cipher_suite(self, cipher_suite: str|int|list) -> None:
+        if not isinstance(cipher_suite, list):
+            cipher_suite = [cipher_suite]
+        cipher_suite = (CS_IDS[g.replace('-', '_').upper()]
+                if isinstance(g, str) else g for g in cipher_suite)
+        self.cipher_suite.extend(cipher_suite)
 
-    def packHandshakeContent(self):
-        tlsver = packU16(self.serverHelloTLSVersion)
-        cipSuite = packU16(self.cipherSuite)
-        cmprss = packU8(self.compression)
-        exts = self.packExtensions()
-        packed = tlsver + self.random + self.sessionId + cipSuite + cmprss + exts
+    def pack_handshake_content(self):
+        tlsver = pack_u16(self.server_hello_tlsversion)
+        cip_suite = pack_u16(self.cipher_suite)
+        cmprss = pack_u8(self.compression)
+        exts = self.pack_extensions()
+        packed = tlsver + self.random + self.session_id + cip_suite + cmprss + exts
         return packed
 
-    def unpackHandshakeContent(self, raw):
+    def unpack_handshake_content(self, raw):
         pos = 0
-        self.serverHelloTLSVersion = unpackU16(raw, pos)
+        self.server_hello_tlsversion = unpack_u16(raw, pos)
         pos += 2
         self.random = raw[pos:pos+31]
         pos += 32
-        self.sessionId = unpackBytes(raw, pos, 1)
-        pos += 1 + len(self.sessionId)
-        self.cipherSuite = unpackU16(raw, pos)
+        self.session_id = unpack_bytes(raw, pos, 1)
+        pos += 1 + len(self.session_id)
+        self.cipher_suite = unpack_u16(raw, pos)
         pos += 2
-        self.compression = unpackU8(raw, pos)
+        self.compression = unpack_u8(raw, pos)
         pos += 1
-#>        rawexts = unpackBytes(raw, pos, 2)
-        self.unpackExtensions(raw, pos)
+#>        rawexts = unpack_bytes(raw, pos, 2)
+        self.unpack_extensions(raw, pos)
 
     def represent(self):
-        randomStr = self.random.hex()
-        sessionStr = self.sessionId.hex()
+        random_str = self.random.hex()
+        session_str = self.session_id.hex()
 
         revlut = {}
         for k, v in CS_IDS.items():
             revlut[v] = k
-        cs = self.cipherSuite
-        cipsuiteStr = revlut.get(cs) or f'unknown_{cs:0>4x}'
+        cs = self.cipher_suite
+        cipsuite_str = revlut.get(cs) or f'unknown_{cs:0>4x}'
 
         cm = self.compression
-        cmprssStr = "uncompressed" if cm == 0 else "unknown_{c:0>2x}"
+        cmprss_str = "uncompressed" if cm == 0 else "unknown_{c:0>2x}"
 
-        extStr = ''
+        ext_str = ''
         for ext in self.extensions:
-            extStr += ext.represent(2)
+            ext_str += ext.represent(2)
 
         return "Handshake-server_hello:\n"       \
-             + f"  Random: {randomStr}\n"         \
-             + f"  SessionID: {sessionStr}\n"     \
-             + f"  CipherSuite: {cipsuiteStr}\n"  \
-             + f"  Compression: {cmprssStr}\n"    \
-             + "  Extensions:\n" + extStr
+             + f"  Random: {random_str}\n"         \
+             + f"  SessionID: {session_str}\n"     \
+             + f"  CipherSuite: {cipsuite_str}\n"  \
+             + f"  Compression: {cmprss_str}\n"    \
+             + "  Extensions:\n" + ext_str

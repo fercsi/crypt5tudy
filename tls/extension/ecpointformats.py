@@ -13,7 +13,7 @@ FORMAT_IDS: dict[str, int] = {
 class EcPointFormats(Extension):
     def __init__(self, formats: list[str|int]|None = None):
         super().__init__()
-        self.extensionType = 11
+        self.extension_type = 11
         if formats:
             self.formats = []
             self.add(formats)
@@ -26,11 +26,11 @@ class EcPointFormats(Extension):
         format = (FORMAT_IDS[f] if isinstance(f, str) else f for f in format)
         self.formats.extend(format)
 
-    def packExtensionContent(self):
-        return packU8List(self.formats, 1)
+    def pack_extension_content(self):
+        return pack_u8_list(self.formats, 1)
 
-    def unpackExtensionContent(self, raw):
-        self.formats = unpackU8List(raw, 0, 1)
+    def unpack_extension_content(self, raw):
+        self.formats = unpack_u8_list(raw, 0, 1)
 
     def represent(self, level: int = 0):
         text = super().represent(level);

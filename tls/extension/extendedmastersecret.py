@@ -7,13 +7,13 @@ from .extension import Extension
 class ExtendedMasterSecret(Extension):
     def __init__(self, secret: bytes = b''):
         super().__init__()
-        self.extensionType = 23
+        self.extension_type = 23
         self.secret = secret
 
-    def packExtensionContent(self) -> bytes:
+    def pack_extension_content(self) -> bytes:
         return self.secret
 
-    def unpackExtensionContent(self, raw: bytes) -> None:
+    def unpack_extension_content(self, raw: bytes) -> None:
         self.secret = raw
 
     def represent(self, level: int = 0) -> str:

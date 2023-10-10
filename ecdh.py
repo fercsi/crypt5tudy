@@ -3,38 +3,38 @@
 import random
 import ec
 
-def decodeLittleEndian(b):
+def decode_little_endian(b):
     return int.from_bytes(b, 'little')
 
-def decodeUCoordinate(u, bits=255):
-    u = decodeLittleEndian(u)
+def decode_ucoordinate(u, bits=255):
+    u = decode_little_endian(u)
     return u & ((1 << bits) - 1)
 
-def encodeUCoordinate(u, p, bits=255):
+def encode_ucoordinate(u, p, bits=255):
     u = u % p
     return u.to_bytes((bits+7>>3), 'little')
 
-def decodeScalar25519(k):
-    k = decodeLittleEndian(k)
+def decode_scalar25519(k):
+    k = decode_little_endian(k)
     return k & ((1<<255) - 8) | (1<<254)
 
-def decodeScalar448(k):
-    k = decodeLittleEndian(k)
+def decode_scalar448(k):
+    k = decode_little_endian(k)
     return k & ((1<<448) - 4) | (1<<447)
 
 def x25519(k, u):
-    k = decodeScalar25519(k)
+    k = decode_scalar25519(k)
     bits = ec.EC25519.bits
-    u = ec.EC25519(decodeUCoordinate(u, bits))
+    u = ec.EC25519(decode_ucoordinate(u, bits))
     u2 = k * u
-    return encodeUCoordinate(int(u2), u2.p, bits)
+    return encode_ucoordinate(int(u2), u2.p, bits)
 
-def generateKeyPairX25519():
+def generate_key_pairX25519():
     g = (9).to_bytes(32, 'little')
     privN = random.randint(2**251, 2**252-1) << 3
     priv = privN.to_bytes(32, 'little')
     pub = x25519(priv, g)
     return priv, pub
 
-def createSecret(myPriv, theirPub):
-    return x25519(myPriv, theirPub)
+def create_secret(my_priv, their_pub):
+    return x25519(my_priv, their_pub)

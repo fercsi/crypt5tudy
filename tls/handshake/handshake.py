@@ -3,78 +3,78 @@
 
 from tls.util import *
 from tls.record import Record
-from tls.extension import Extension, packExtensionList, unpackExtensionList
+from tls.extension import Extension, pack_extension_list, unpack_extension_list
 #>from tls.supported_extensions import *
 #>from tls.supported_extensions import _EXTENSION_HANDLERS
 
 class Handshake(Record):
     def __init__(self):
         super().__init__()
-        self.recordType = 22
-        self.handshakeType = 0
+        self.record_type = 22
+        self.handshake_type = 0
         self.extensions = []
 
-    def packRecordContent(self) -> bytes:
-        type = packU8(self.handshakeType)
-        content = packBytes(self.packHandshakeContent(), 3)
+    def pack_record_content(self) -> bytes:
+        type = pack_u8(self.handshake_type)
+        content = pack_bytes(self.pack_handshake_content(), 3)
         return type +  content
 
-    def packHandshakeContent(self) -> bytes:
+    def pack_handshake_content(self) -> bytes:
         return b''
 
-    def unpackRecordContent(self, raw: bytes) -> None:
-        self.handshakeType = unpackU8(raw, 0)
-        rawContent = unpackBytes(raw, 1, 3)
-        self.unpackHandshakeContent(rawContent)
+    def unpack_record_content(self, raw: bytes) -> None:
+        self.handshake_type = unpack_u8(raw, 0)
+        raw_content = unpack_bytes(raw, 1, 3)
+        self.unpack_handshake_content(raw_content)
 
-    def unpackHandshakeContent(self, raw: bytes) -> None:
+    def unpack_handshake_content(self, raw: bytes) -> None:
         pass
 
-    def addExtension(self, extension: Extension) -> None:
-        extension.handshakeType = self.handshakeType
+    def add_extension(self, extension: Extension) -> None:
+        extension.handshake_type = self.handshake_type
         self.extensions.append(extension)
 
-    def packExtensions(self) -> bytes:
-        return packExtensionList(self.extensions, 2)
+    def pack_extensions(self) -> bytes:
+        return pack_extension_list(self.extensions, 2)
 #>        exts = (ext.pack() for ext in self.extensions)
-#>        return packBytesList(exts, 2)
+#>        return pack_bytes_list(exts, 2)
 
-    def unpackExtensions(self, raw: bytes, pos: int) -> None:
-        extensions = unpackExtensionList(raw, pos, self.handshakeType, 2)
+    def unpack_extensions(self, raw: bytes, pos: int) -> None:
+        extensions = unpack_extension_list(raw, pos, self.handshake_type, 2)
         for extension in extensions:
-            self.addExtension(extension)
+            self.add_extension(extension)
 #>
 #>    def _unpackExtensions(self, raw: bytes) -> list[Extension]:
 #>        pos = 0
 #>        length = len(raw)
 #>        extensions = []66
 #>        while pos < length:
-#>            extType = unpackU16(raw, pos)
-#>            extContent = raw[pos:4+pos+unpackU16(raw, pos+2)]
-#>            pos += len(extContent)
-#>            extension = _EXTENSION_HANDLERS.get(extType)
+#>            ext_type = unpack_u16(raw, pos)
+#>            ext_content = raw[pos:4+pos+unpack_u16(raw, pos+2)]
+#>            pos += len(ext_content)
+#>            extension = _EXTENSION_HANDLERS.get(ext_type)
 #>            if extension is not None:
 #>                extension = extension()
 #>            else:
-#>                extension = UnknownExtension(extType)
-#>            extension.handshakeType = self.handshakeType
-#>            extension.unpack(extContent)
+#>                extension = UnknownExtension(ext_type)
+#>            extension.handshake_type = self.handshake_type
+#>            extension.unpack(ext_content)
 #>            extensions.append(extension)
 #>        return extensions
 
 
 class UnknownHandshake(Handshake):
-    def __init__(self, handshakeType: int, content: bytes = b''):
+    def __init__(self, handshake_type: int, content: bytes = b''):
         super().__init__()
-        self.handshakeType = handshakeType
+        self.handshake_type = handshake_type
         self.content = content
 
-    def packHandshakeContent(self) -> bytes:
+    def pack_handshake_content(self) -> bytes:
         return self.content
 
-    def packHandshakeContent(self, raw: bytes) -> None:
+    def pack_handshake_content(self, raw: bytes) -> None:
         self.content = raw
 
     def represent(self) -> str:
-        return f'Handshake-unknown_{self.handshakeType:0>2x}:\n' \
+        return f'Handshake-unknown_{self.handshake_type:0>2x}:\n' \
              + f'  Content: {self.content.hex()}\n'

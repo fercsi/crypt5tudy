@@ -10,26 +10,26 @@ class ServerInfo(NamedTuple):
     type: int
 
 class ServerName(Extension):
-    def __init__(self, serverName: str|None = None):
+    def __init__(self, server_name: str|None = None):
         super().__init__()
-        self.extensionType = 0
+        self.extension_type = 0
         self.names = []
-        if serverName is not None:
-            self.add(serverName)
+        if server_name is not None:
+            self.add(server_name)
 
     def add(self, name: str, type: int = 0) -> None:
         self.names.append(ServerInfo(name, type))
 
-    def packExtensionContent(self):
-        content = (packU8(n.type) + packStr(n.name, 2) for n in self.names)
-        return packBytesList(content, 2)
+    def pack_extension_content(self):
+        content = (pack_u8(n.type) + pack_str(n.name, 2) for n in self.names)
+        return pack_bytes_list(content, 2)
 
-    def unpackExtensionContent(self, raw):
-        srvRawList = unpackBytesList(raw, 0, 0, 2)
-        for srvRaw in srvRawList:
-            srvType = unpackU8(srvRaw, 0)
-            srvName = unpackStr(srvRaw, 1, 2)
-            self.add(srvName, srvType)
+    def unpack_extension_content(self, raw):
+        srv_raw_list = unpack_bytes_list(raw, 0, 0, 2)
+        for srv_raw in srv_raw_list:
+            srv_type = unpack_u8(srv_raw, 0)
+            srv_name = unpack_str(srv_raw, 1, 2)
+            self.add(srv_name, srv_type)
 
     def represent(self, level: int = 0):
         text = super().represent(level);

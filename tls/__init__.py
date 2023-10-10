@@ -7,4 +7,4 @@ from .changecipherspec import ChangeCipherSpec
 from .alert import Alert
 from .applicationdata import ApplicationData
 
-from .unpackrecord import unpackRecord, unpackRecords
+from .unpackrecord import unpack_record, unpack_records

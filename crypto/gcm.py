@@ -12,7 +12,7 @@ class GCM:
         self.encryption = encryption
         self.h = self.poly(int.from_bytes(encryption.encrypt(b'\0'*16), 'big'))
 
-    def nonceToIV(self, nonce: bytes):
+    def nonce_toIV(self, nonce: bytes):
         if len(nonce) == 12:
             iv = nonce + b'\0\0\0\1'
         else:
@@ -21,26 +21,26 @@ class GCM:
                                 + (len(nonce) * 8).to_bytes(16, 'big'))
         return int.from_bytes(iv)
 
-    def encrypt(self, plainText: bytes, authData: bytes, nonce: bytes) -> (bytes, bytes):
-        iv = self.nonceToIV(nonce)
-        p = plainText
+    def encrypt(self, plain_text: bytes, auth_data: bytes, nonce: bytes) -> (bytes, bytes):
+        iv = self.nonce_toIV(nonce)
+        p = plain_text
         c = self.gctr(iv + 1, p)
         u = (-len(c)) % 16
-        v = (-len(authData)) % 16
+        v = (-len(auth_data)) % 16
         # length is in bits (not documented in RFC):
-        s = self.ghash(authData + (b'\0' * v) + c + (b'\0' * u)
-            + (len(authData)*8).to_bytes(8, 'big') + (len(c)*8).to_bytes(8, 'big'))
+        s = self.ghash(auth_data + (b'\0' * v) + c + (b'\0' * u)
+            + (len(auth_data)*8).to_bytes(8, 'big') + (len(c)*8).to_bytes(8, 'big'))
         t = self.gctr(iv, s)[:16]
         return c, t
 
-    def decrypt(self, cipherText: bytes, authData: bytes, nonce: bytes) -> (bytes, bytes):
-        iv = self.nonceToIV(nonce)
-        c = cipherText
+    def decrypt(self, cipher_text: bytes, auth_data: bytes, nonce: bytes) -> (bytes, bytes):
+        iv = self.nonce_toIV(nonce)
+        c = cipher_text
         p = self.gctr(iv + 1, c)
         u = (-len(c)) % 16
-        v = (-len(authData)) % 16
-        s = self.ghash(authData + (b'\0' * v) + c + (b'\0' * u)
-            + (len(authData)*8).to_bytes(8, 'big') + (len(c)*8).to_bytes(8, 'big'))
+        v = (-len(auth_data)) % 16
+        s = self.ghash(auth_data + (b'\0' * v) + c + (b'\0' * u)
+            + (len(auth_data)*8).to_bytes(8, 'big') + (len(c)*8).to_bytes(8, 'big'))
         t = self.gctr(iv, s)[:16]
         return p, t
 

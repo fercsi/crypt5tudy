@@ -7,13 +7,13 @@ from .extension import Extension
 class SessionTicket(Extension):
     def __init__(self, ticket: bytes = b''):
         super().__init__()
-        self.extensionType = 35
+        self.extension_type = 35
         self.ticket = ticket
 
-    def packExtensionContent(self) -> bytes:
+    def pack_extension_content(self) -> bytes:
         return self.ticket
 
-    def unpackExtensionContent(self, raw: bytes) -> None:
+    def unpack_extension_content(self, raw: bytes) -> None:
         self.ticket = raw
 
     def represent(self, level: int = 0) -> str:

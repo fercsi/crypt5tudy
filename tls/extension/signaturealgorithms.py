@@ -16,7 +16,7 @@ ALGORITHM_IDS: dict[str, int] = {
     'ecdsa_secp384r1_sha384': 0x0503,
     'ecdsa_secp521r1_sha512': 0x0603,
 
-    # RSASSA-PSS algorithms with public key OID rsaEncryption
+    # RSASSA-PSS algorithms with public key OID rsa_encryption
     'rsa_pss_rsae_sha256': 0x0804,
     'rsa_pss_rsae_sha384': 0x0805,
     'rsa_pss_rsae_sha512': 0x0806,
@@ -38,7 +38,7 @@ ALGORITHM_IDS: dict[str, int] = {
 class SignatureAlgorithms(Extension):
     def __init__(self, algorithms: list[str|int]|None = None):
         super().__init__()
-        self.extensionType = 13
+        self.extension_type = 13
 #>        self.algorithms = list(ALGORITHM_IDS.values())
         self.algorithms = []
         if algorithms:
@@ -51,11 +51,11 @@ class SignatureAlgorithms(Extension):
                 if isinstance(g, str) else g for g in algorithm)
         self.algorithms.extend(algorithm)
 
-    def packExtensionContent(self):
-        return packU16List(self.algorithms, 2)
+    def pack_extension_content(self):
+        return pack_u16_list(self.algorithms, 2)
 
-    def unpackExtensionContent(self, raw):
-        self.algorithms = unpackU16List(raw, 0, 2)
+    def unpack_extension_content(self, raw):
+        self.algorithms = unpack_u16_list(raw, 0, 2)
 
     def represent(self, level: int = 0):
         text = super().represent(level);

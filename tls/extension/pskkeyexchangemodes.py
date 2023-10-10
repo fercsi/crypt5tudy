@@ -12,7 +12,7 @@ KEXMODE_IDS: dict[str, int] = {
 class PskKeyExchangeModes(Extension):
     def __init__(self, kexmodes: list[str|int]|None = None):
         super().__init__()
-        self.extensionType = 45
+        self.extension_type = 45
         self.kexmodes = []
         if kexmodes:
             self.add(kexmodes)
@@ -24,11 +24,11 @@ class PskKeyExchangeModes(Extension):
                 if isinstance(g, str) else g for g in kexmode)
         self.kexmodes.extend(kexmode)
 
-    def packExtensionContent(self):
-        return packU8List(self.kexmodes, 1)
+    def pack_extension_content(self):
+        return pack_u8_list(self.kexmodes, 1)
 
-    def unpackExtensionContent(self, raw):
-        self.kexmodes = unpackU8List(raw, 0, 1)
+    def unpack_extension_content(self, raw):
+        self.kexmodes = unpack_u8_list(raw, 0, 1)
 
     def represent(self, level: int = 0):
         text = super().represent(level);

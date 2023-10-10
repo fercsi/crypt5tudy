@@ -16,33 +16,33 @@ _RECORD_HANDLERS = {
     23: ApplicationData,
     }
 
-def unpackRecord(raw: bytes) -> Record:
-    return unpackRecords(raw, 1)[0]
+def unpack_record(raw: bytes) -> Record:
+    return unpack_records(raw, 1)[0]
 
-def unpackRecords(raw: bytes, limit: int = 0) -> [Record]:
+def unpack_records(raw: bytes, limit: int = 0) -> [Record]:
     pos = 0
     records = []
     if limit == 0:
         limit = len(raw)
     while pos < len(raw) and len(records) < limit:
-        recordLength = 5 + unpackU16(raw, pos+3)
-        recordContent = raw[pos:pos+recordLength]
-        recordType = unpackU8(recordContent, 0)
-        recordTLSVersion = unpackU16(recordContent, 11)
-        recordHandler = _RECORD_HANDLERS.get(recordType)
-        if recordHandler is None:
-            record = UnknownRecord(recordType)
+        record_length = 5 + unpack_u16(raw, pos+3)
+        record_content = raw[pos:pos+record_length]
+        record_type = unpack_u8(record_content, 0)
+        record_tlsversion = unpack_u16(record_content, 11)
+        record_handler = _RECORD_HANDLERS.get(record_type)
+        if record_handler is None:
+            record = UnknownRecord(record_type)
         else:
-            record = recordHandler()
+            record = record_handler()
         if isinstance(record, Handshake):
-            handshakeType = unpackU8(recordContent, 5)
-            handshakeHandler = _HANDSHAKE_HANDLERS.get(handshakeType)
-            if handshakeHandler is None:
-                record = UnknownHandshake(handshakeType)
+            handshake_type = unpack_u8(record_content, 5)
+            handshake_handler = _HANDSHAKE_HANDLERS.get(handshake_type)
+            if handshake_handler is None:
+                record = UnknownHandshake(handshake_type)
             else:
-                record = handshakeHandler()
-        record.recordTLSVersion = recordTLSVersion
-        record.unpack(recordContent)
+                record = handshake_handler()
+        record.record_tlsversion = record_tlsversion
+        record.unpack(record_content)
         records.append(record)
-        pos += recordLength
+        pos += record_length
     return records

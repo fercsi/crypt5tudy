@@ -20,7 +20,7 @@ GROUP_IDS: dict[str, int] = {
 class SupportedGroups(Extension):
     def __init__(self, groups: list[str|int]|None = None):
         super().__init__()
-        self.extensionType = 10
+        self.extension_type = 10
         self.groups = []
         if groups:
             self.add(groups)
@@ -31,11 +31,11 @@ class SupportedGroups(Extension):
         group = (GROUP_IDS[g] if isinstance(g, str) else g for g in group)
         self.groups.extend(group)
 
-    def packExtensionContent(self):
-        return packU16List(self.groups, 2)
+    def pack_extension_content(self):
+        return pack_u16_list(self.groups, 2)
 
-    def unpackExtensionContent(self, raw):
-        self.groups = unpackU16List(raw, 0, 2)
+    def unpack_extension_content(self, raw):
+        self.groups = unpack_u16_list(raw, 0, 2)
 
     def represent(self, level: int = 0):
         text = super().represent(level);

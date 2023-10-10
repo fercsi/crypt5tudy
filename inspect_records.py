@@ -45,11 +45,11 @@ if len(sys.argv) > 4:
 
 with open(fname,'rb') as f:
     content = f.read()
-    records = tls.unpackRecords(content)
+    records = tls.unpack_records(content)
     for record in records:
-        if record.recordType == 23 and key is not None:
-            decrypted = decrypt_record(record.rawContent)
-            inner = tls.unpackRecord(decrypted)
+        if record.record_type == 23 and key is not None:
+            decrypted = decrypt_record(record.raw_content)
+            inner = tls.unpack_record(decrypted)
             print(f'[#]{inner}')
             recsn +=  1
             continue

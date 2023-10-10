@@ -14,7 +14,7 @@ class Weierstrass:
         self.a = a
         self.b = b
 
-    def xToPoint(self, x: int) -> ECPoint:
+    def x_to_point(self, x: int) -> ECPoint:
         z = (x * x * x + self.a * x + self.b) % self.order
         m = Modular(self.order)
         ys = m.sqrt(z)

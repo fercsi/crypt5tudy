@@ -5,16 +5,16 @@ import hashlib
 from typing import Callable
 
 class HashFunctionFactory:
-    def create(self, hashName: str) -> Callable|None:
-        hashFunction = None
-        hashName = hashName.lower()
-        if hashName in hashlib.algorithms_available:
-            hashFunction = getattr(hashlib, hashName)
-        if hashFunction is None:
-            raise NotImplementedError(f'Hash type "{hashName}" is not supported')
-        return hashFunction
+    def create(self, hash_name: str) -> Callable|None:
+        hash_function = None
+        hash_name = hash_name.lower()
+        if hash_name in hashlib.algorithms_available:
+            hash_function = getattr(hashlib, hash_name)
+        if hash_function is None:
+            raise NotImplementedError(f'Hash type "{hash_name}" is not supported')
+        return hash_function
 
-hashFunctionFactory = HashFunctionFactory()
+hash_function_factory = HashFunctionFactory()
 
 # To create hash functions
 # Hash function returns an object, having the following methods

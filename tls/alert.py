@@ -42,24 +42,24 @@ DESCRIPTION_IDS: dict[str, int] = {
 class Alert(Record):
     def __init__(self, level: int|str = 0, description: int|str = 0):
         super().__init__()
-        self.recordType = 21
-        self.setLevel(level)
-        self.setDescription(description)
+        self.record_type = 21
+        self.set_level(level)
+        self.set_description(description)
 
-    def setLevel(self, level: str|int) -> None:
+    def set_level(self, level: str|int) -> None:
         n = level
         self.level = LEVEL_IDS[n] if isinstance(n, str) else n
 
-    def setDescription(self, description: str|int) -> None:
+    def set_description(self, description: str|int) -> None:
         n = description
         self.description = DESCRIPTION_IDS[n] if isinstance(n, str) else n
 
-    def packRecordContent(self) -> bytes:
-        return packU8(self.level) + packU8(self.description)
+    def pack_record_content(self) -> bytes:
+        return pack_u8(self.level) + pack_u8(self.description)
 
-    def unpackRecordContent(self, raw: bytes) -> None:
-        self.level = unpackU8(raw, 0)
-        self.description = unpackU8(raw, 1)
+    def unpack_record_content(self, raw: bytes) -> None:
+        self.level = unpack_u8(raw, 0)
+        self.description = unpack_u8(raw, 1)
 
     def represent(self, level: int = 0):
         ind = '  '*level

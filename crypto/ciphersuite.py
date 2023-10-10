@@ -9,9 +9,9 @@ class CipherSuite(NamedTuple):
     signature: str|None
     encryption: str
     hash: str
-    kLen: int # in octets
-    nMin: int
-    nMax: int
+    k_len: int # in octets
+    n_min: int
+    n_max: int
 
 CIPHER_SUITE_BY_ID = {
     0x1301: CipherSuite( # RFC5116

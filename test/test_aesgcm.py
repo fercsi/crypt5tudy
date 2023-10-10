@@ -7,7 +7,7 @@ from crypto import GCM
 # David A. McGrew, John Viega: The Galois/Counter Mode of Operation (GCM)
 # Appendix B, AES Test Vectors
 # Note: Currently only IV-s length of 96 bits are supported
-TEST_VECTORS = ('key,plainText,authData,iv,cipherText,authTag', (
+TEST_VECTORS = ('key,plain_text,auth_data,iv,cipher_text,auth_tag', (
     # ==== AES 128 ====
     (   '00000000000000000000000000000000', #1
         '',
@@ -122,31 +122,31 @@ TEST_VECTORS = ('key,plainText,authData,iv,cipherText,authTag', (
 ))
 
 @pytest.mark.parametrize(*TEST_VECTORS)
-def test_encryption(key,plainText,authData,iv,cipherText,authTag):
+def test_encryption(key,plain_text,auth_data,iv,cipher_text,auth_tag):
     key = bytes.fromhex(key)
     iv = bytes.fromhex(iv)
-    plainText = bytes.fromhex(plainText)
-    authData = bytes.fromhex(authData)
-    cipherText = bytes.fromhex(cipherText)
-    authTag = bytes.fromhex(authTag)
+    plain_text = bytes.fromhex(plain_text)
+    auth_data = bytes.fromhex(auth_data)
+    cipher_text = bytes.fromhex(cipher_text)
+    auth_tag = bytes.fromhex(auth_tag)
 
     aes = AES(key)
     enc = GCM(aes)
-    chk_cipherText, chk_authTag = enc.encrypt(plainText, authData, iv)
-    assert chk_cipherText == cipherText
-    assert chk_authTag == authTag
+    chk_cipher_text, chk_auth_tag = enc.encrypt(plain_text, auth_data, iv)
+    assert chk_cipher_text == cipher_text
+    assert chk_auth_tag == auth_tag
 
 @pytest.mark.parametrize(*TEST_VECTORS)
-def test_decryption(key,plainText,authData,iv,cipherText,authTag):
+def test_decryption(key,plain_text,auth_data,iv,cipher_text,auth_tag):
     key = bytes.fromhex(key)
     iv = bytes.fromhex(iv)
-    plainText = bytes.fromhex(plainText)
-    authData = bytes.fromhex(authData)
-    cipherText = bytes.fromhex(cipherText)
-    authTag = bytes.fromhex(authTag)
+    plain_text = bytes.fromhex(plain_text)
+    auth_data = bytes.fromhex(auth_data)
+    cipher_text = bytes.fromhex(cipher_text)
+    auth_tag = bytes.fromhex(auth_tag)
 
     aes = AES(key)
     enc = GCM(aes)
-    chk_plainText, chk_authTag = enc.decrypt(cipherText, authData, iv)
-    assert chk_plainText == plainText
-    assert chk_authTag == authTag
+    chk_plain_text, chk_auth_tag = enc.decrypt(cipher_text, auth_data, iv)
+    assert chk_plain_text == plain_text
+    assert chk_auth_tag == auth_tag

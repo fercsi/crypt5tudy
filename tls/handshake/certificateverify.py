@@ -8,27 +8,27 @@ from ..util import *
 class CertificateVerify(Handshake):
     def __init__(self, algorithm: int|str = 0):
         super().__init__()
-        self.handshakeType = 15
-        self.setAlgorithm(algorithm)
+        self.handshake_type = 15
+        self.set_algorithm(algorithm)
         self.signature = b''
 
-    def setAlgorithm(self, algorithm: int|str) -> None:
+    def set_algorithm(self, algorithm: int|str) -> None:
         if isinstance(algorithm, str):
             algorithm = ALGORITHM_IDS.get(algorithm.lower())
             if algorithm is None:
                 raise NotImplementedError("Signature algorithm not supported")
         self.algorithm = algorithm
 
-    def packHandshakeContent(self):
-        algorithm = packU16(self.algorithm)
-        signature = packBytes(self.signature, 2)
+    def pack_handshake_content(self):
+        algorithm = pack_u16(self.algorithm)
+        signature = pack_bytes(self.signature, 2)
         return algorithm + signature
 
-    def unpackHandshakeContent(self, raw):
+    def unpack_handshake_content(self, raw):
         pos = 0
-        self.algorithm = unpackU16(raw, pos)
+        self.algorithm = unpack_u16(raw, pos)
         pos += 2
-        self.signature = unpackBytes(raw, pos, 2)
+        self.signature = unpack_bytes(raw, pos, 2)
 
     def represent(self, level: int = 0):
         algorithm = None

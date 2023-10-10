@@ -6,12 +6,12 @@ from .extension import Extension
 class EncryptThenMAC(Extension):
     def __init__(self):
         super().__init__()
-        self.extensionType = 22
+        self.extension_type = 22
 
-    def packExtensionContent(self) -> bytes:
+    def pack_extension_content(self) -> bytes:
         return b''
 
-    def unpackExtensionContent(self, raw: bytes) -> None:
+    def unpack_extension_content(self, raw: bytes) -> None:
         pass
 
     def represent(self, level: int = 0) -> str:

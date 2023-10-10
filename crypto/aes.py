@@ -5,12 +5,12 @@ import pyaes
 from .encryption import Encryption
 
 class AES(Encryption):
-    def encrypt(self, plainText: bytes) -> bytes:
+    def encrypt(self, plain_text: bytes) -> bytes:
         aes = pyaes.AES(self.key)
-        cipherText = aes.encrypt(plainText)
-        return cipherText
+        cipher_text = aes.encrypt(plain_text)
+        return cipher_text
 
-    def decrypt(self, cipherText: bytes) -> bytes:
+    def decrypt(self, cipher_text: bytes) -> bytes:
         aes = pyaes.AES(self.key)
-        plainText = aes.decrypt(cipherText)
-        return plainText
+        plain_text = aes.decrypt(cipher_text)
+        return plain_text
