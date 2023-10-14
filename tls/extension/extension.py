@@ -15,13 +15,13 @@ class Extension:
         self.handshake_type = 0
         self.extension_type = 0xfafa
 
-    def pack(self):
+    def pack(self, **kwarg):
         type = self.extension_type.to_bytes(2, 'big')
         content = self.pack_extension_content()
         length = len(content).to_bytes(2, 'big')
         return type + length + content
 
-    def unpack(self, raw):
+    def unpack(self, raw, **kwarg):
         self.extension_type = unpack_u16(raw, 0)
         self.unpack_extension_content(raw[4:])
 

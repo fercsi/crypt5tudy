@@ -4,11 +4,11 @@ from .extension import Extension
 from ..supported_extensions import _EXTENSION_HANDLERS
 from ..util import *
 
-def pack_extension_list(extensions: list[Extension], size: int) -> bytes:
-    exts = (ext.pack() for ext in extensions)
+def pack_extension_list(extensions: list[Extension], size: int, **kwargs) -> bytes:
+    exts = (ext.pack(**kwargs) for ext in extensions)
     return pack_bytes_list(exts, size)
 
-def unpack_extension_list(raw: bytes, pos: int, handshake_type: int, size: int) -> list[Extension]:
+def unpack_extension_list(raw: bytes, pos: int, handshake_type: int, size: int, **kwargs) -> list[Extension]:
     endpos = pos + size + unpack_int(raw, pos, size)
     pos += size
     extensions = []
@@ -22,6 +22,6 @@ def unpack_extension_list(raw: bytes, pos: int, handshake_type: int, size: int) 
         else:
             extension = UnknownExtension(ext_type)
         extension.handshake_type = handshake_type
-        extension.unpack(ext_content)
+        extension.unpack(ext_content, **kwargs)
         extensions.append(extension)
     return extensions

@@ -5,19 +5,21 @@ from tls.util import *
 from tls.record import Record
 
 class ApplicationData(Record):
-    def __init__(self, cipher_text: bytes = b''):
+    def __init__(self, content: bytes = b''):
         super().__init__()
         self.record_type = 23
-        self.cipher_text = cipher_text
+        self.content = content
 
     def pack_record_content(self) -> bytes:
-        return self.cipher_text
+        return self.content
 
     def unpack_record_content(self, raw: bytes) -> None:
 #>        self.cipher_text = raw
-        self.auth_data = self.raw_content[:5]
-        self.auth_tag = raw[-16:]
-        self.cipher_text = raw[:-16]
+#>        self.auth_data = self.raw_content[:5]
+        self.content = raw
+        # TODO: remove
+#>        self.auth_tag = raw[-16:] # Note, that this is true only in major cases!
+#>        self.cipher_text = raw[:-16]
 
     def represent(self) -> str:
-        return f'ApplicationData:\n  CipherText: {self.cipher_text.hex()}\n'
+        return f'ApplicationData:\n  Content: {self.content.hex()}\n'

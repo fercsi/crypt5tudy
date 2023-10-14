@@ -40,7 +40,8 @@ class Handshake(Record):
 #>        return pack_bytes_list(exts, 2)
 
     def unpack_extensions(self, raw: bytes, pos: int) -> None:
-        extensions = unpack_extension_list(raw, pos, self.handshake_type, 2)
+        extensions = unpack_extension_list(raw, pos, self.handshake_type, 2,
+                                                                   record=self)
         for extension in extensions:
             self.add_extension(extension)
 #>

@@ -6,46 +6,58 @@ from tls.util import *
 from .extension import Extension
 from .supportedgroups import GROUP_IDS
 
-class KeyInfo(NamedTuple):
-    key: bytes
-    method: int
+class KeyShareEntry(NamedTuple):
+    group: int
+    key_exchange: bytes|None
 
 class KeyShare(Extension):
-    def __init__(self, key: bytes|None = None, method: str|int|None = None):
+    def __init__(self, group: str|int|None = None, key_exchange: bytes|None = None):
         super().__init__()
         self.extension_type = 51
-        self.keys = []
-        if key is not None:
-            if method is None:
-                raise TypeError('Kex method is not given')
-            self.add(key, method)
+        self.shares = []
+        if key_exchange is not None:
+            if group is None:
+                raise TypeError('No group to key exchange given')
+            self.add(group, key_exchange)
 
-    def add(self, key: bytes, method: int) -> None:
-        if isinstance(method, str):
-            method = GROUP_IDS[method]
-        self.keys.append(KeyInfo(key, method))
+    def add(self, group: int, key_exchange: bytes | None = None) -> None:
+        """Add group/key_exhange pair to KeyShare
+
+        Note, that key_exchange might be missing in case of a `HelloRetryRequest`
+        handshake records.
+        """
+        if isinstance(group, str):
+            group = GROUP_IDS[group]
+        self.shares.append(KeyShareEntry(group, key_exchange))
 
     def pack_extension_content(self):
         if self.handshake_type == 1:
-            content = (pack_u16(n.method) + pack_bytes(n.key, 2) for n in self.keys)
+            content = (pack_u16(n.group) + pack_bytes(n.key_exchange, 2) for n in self.shares)
             return pack_bytes_list(content, 2)
         elif self.handshake_type == 2:
-            key = self.keys[0]
-            return pack_u16(key.method) + pack_bytes(key.key, 2)
+            key_exchange = self.shares[0]
+            if not self.hello_retry_request:
+                return pack_u16(key_exchange.group) + pack_bytes(key_exchange.key_exchange, 2)
+            else:
+                return pack_u16(key_exchange.group)
         else:
             raise TypeError(f"Don't know, how to pack `KeyShare` for handshake type {self.handshake_type}")
 
-    def unpack_extension_content(self, raw):
+    def unpack_extension_content(self, raw, *, record=None):
         if self.handshake_type == 1:
-            key_raw_list = unpack_bytes_list(raw, 0, 0, 2)
+            key_share = unpack_bytes_list(raw, 0, 0, 2)
         elif self.handshake_type == 2:
-            key_raw_list = [raw]
+            if record and record.hello_retry_request:
+                group = unpack_u16(raw, 0)
+                self.add(group)
+                return
+            key_share = [raw]
         else:
             raise TypeError(f"Don't know, how to unpack `SupportedVersion` for handshake type {self.handshake_type}")
-        for key_raw in key_raw_list:
-            keymethod = unpack_u16(key_raw, 0)
-            key_data = unpack_bytes(key_raw, 2, 2)
-            self.add(key_data, keymethod)
+        for key_share_entry in key_share:
+            group = unpack_u16(key_share_entry, 0)
+            key_exchange = unpack_bytes(key_share_entry, 2, 2)
+            self.add(group, key_exchange)
 
     def represent(self, level: int = 0):
         text = super().represent(level);
@@ -53,8 +65,8 @@ class KeyShare(Extension):
         revlut = {}
         for k, v in GROUP_IDS.items():
             revlut[v] = k
-        for v in self.keys:
-            method = revlut.get(v.method) or f'unknown_{v.method:0>4x}';
-            text += ind + f'  - method: {method}\n'
-            text += ind + f'    key: {v.key.hex()}\n'
+        for v in self.shares:
+            group = revlut.get(v.group) or f'unknown_{v.group:0>4x}';
+            text += ind + f'  - group: {group}\n'
+            text += ind + f'    key_exchange: {v.key_exchange.hex()}\n'
         return text

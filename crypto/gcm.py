@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-from polynomial import Polynomial
+from .polynomial import Polynomial
 from .encryption import Encryption
 
 class GCM:

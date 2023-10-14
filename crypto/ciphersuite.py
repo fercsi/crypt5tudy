@@ -12,41 +12,41 @@ class CipherSuite(NamedTuple):
     k_len: int # in octets
     n_min: int
     n_max: int
+    t_len: int
 
 CIPHER_SUITE_BY_ID = {
     0x1301: CipherSuite( # RFC5116
         0x1301, 'TLS_AES_128_GCM_SHA256',
         None, None,
         'AES_GCM_13', 'SHA256',
-        16, 12, 12,
+        16, 12, 12, 16,
     ),
     0x1302: CipherSuite( # RFC5116
         0x1302, 'TLS_AES_256_GCM_SHA384',
         None, None,
         'AES_GCM_13', 'SHA384',
-        32, 12, 12,
+        32, 12, 12, 16,
     ),
     0x1303: CipherSuite( #RFC7539
         0x1303, 'TLS_CHACHA20_POLY1305_SHA256',
         None, None,
         'CHACHA20_POLY1305_13', 'SHA256',
-        256, 12, 12,
+        256, 12, 12, 16,
     ),
     0x1304: CipherSuite( # RFC5116
         0x1304, 'TLS_AES_128_CCM_SHA256',
         None, None,
         'AES_128_CCM_16_13', 'SHA256',
-        16, 12, 12,
+        16, 12, 12, 16,
     ),
     0x1305: CipherSuite( # RFC5116
         0x1305, 'TLS_AES_128_CCM_8_SHA256',
         None, None,
         'AES_128_CCM_8_13', 'SHA256',
-        16, 12, 12,
+        16, 12, 12, 8,
     ),
 }
 
-CIPHER_SUIT_BY_NAME = {}
+CIPHER_SUITE_BY_STR = {}
 for id, cs in CIPHER_SUITE_BY_ID.items():
-    CIPHER_SUIT_BY_NAME[cs.idstr] = cs
-
+    CIPHER_SUITE_BY_STR[cs.idstr] = cs

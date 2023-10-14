@@ -20,6 +20,9 @@ def pack_u16(content: int) -> bytes:
 def pack_u24(content: int) -> bytes:
     return content.to_bytes(3, 'big')
 
+def pack_u32(content: int) -> bytes:
+    return content.to_bytes(4, 'big')
+
 def pack_str(content: str, size: int) -> bytes:
     data = content.encode()
     return pack_int(len(data), size) + data
@@ -61,6 +64,9 @@ def unpack_u16(raw: bytes, pos: int) -> int:
 def unpack_u24(raw: bytes, pos: int) -> int:
     return int.from_bytes(raw[pos:pos+3], 'big')
 
+def unpack_u32(raw: bytes, pos: int) -> int:
+    return int.from_bytes(raw[pos:pos+4], 'big')
+
 def unpack_str(raw: bytes, pos: int, size: int) -> str:
     length = unpack_int(raw, pos, size)
     data = raw[pos+size:pos+size+length]
@@ -101,3 +107,9 @@ def unpack_bytes_list(raw: bytes, pos: int, size1: int, size2: int) -> list[int]
         content.append(data)
         pos += size2 + len(data)
     return content
+
+# Little endian for some special cases
+
+def unpack_int_le(raw: bytes, size: int) -> int:
+    return int.from_bytes(raw, 'little')
+

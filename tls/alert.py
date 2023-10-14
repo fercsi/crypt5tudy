@@ -50,6 +50,12 @@ class Alert(Record):
         n = level
         self.level = LEVEL_IDS[n] if isinstance(n, str) else n
 
+    def is_fatal(self):
+        return self.level == LEVEL_IDS['fatal']
+
+    def is_warning(self):
+        return self.level == LEVEL_IDS['warning']
+
     def set_description(self, description: str|int) -> None:
         n = description
         self.description = DESCRIPTION_IDS[n] if isinstance(n, str) else n
@@ -60,6 +66,22 @@ class Alert(Record):
     def unpack_record_content(self, raw: bytes) -> None:
         self.level = unpack_u8(raw, 0)
         self.description = unpack_u8(raw, 1)
+
+    def error_str(self) -> str:
+        """String representation of the alert.
+
+        Returns
+        -------
+        String representation of the alert. E.g. `"protocol_version (70)"`.
+        For unknown alert types, the string format is `"unknown_alert (182)"`.
+        """
+        d = self.description
+        text = 'unknown_alert'
+        for k, v in DESCRIPTION_IDS.items():
+            if v == d:
+                text = k
+                break
+        return f'{text} ({d})'
 
     def represent(self, level: int = 0):
         ind = '  '*level

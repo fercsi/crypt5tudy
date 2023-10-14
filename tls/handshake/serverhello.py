@@ -14,17 +14,24 @@ CS_IDS = {
     'TLS_EMPTY_RENEGOTIATION_INFO_SCSV': 0x00ff,
     }
 
+HELLORETRYREQUEST_HASH = bytes.fromhex('cf21ad74e59a6111be1d8c021e65b891c2a211167abb8c5e079e09e2c8a8339c')
+
 class ServerHello(Handshake):
     def __init__(self, cipher_suite: int = 0):
         super().__init__()
         self.handshake_type = 1
         self.server_hello_tlsversion = 0x0303
         self.random = random_bytes(32)
+        # NOTE: In the spirit of "downgrade protection", negotiating TLS1.2
+        # random must end with b'DOWNGRD\1'. Support for <TLS1.2 won't ever
+        # be part of this tool (for more info, see RFC8446 4.1.3)
+
         # Session ID is not used in TLS1.3, but for security reasons don't leak
         # information:
         self.session_id = pack_bytes(random_bytes(32), 1)
         self.cipher_suite = cipher_suite
         self.compression = 0 # TLS1.3 does not allow compression
+        self.hello_retry_request = False
 
     def add_cipher_suite(self, cipher_suite: str|int|list) -> None:
         if not isinstance(cipher_suite, list):
@@ -46,6 +53,8 @@ class ServerHello(Handshake):
         self.server_hello_tlsversion = unpack_u16(raw, pos)
         pos += 2
         self.random = raw[pos:pos+31]
+        if self.random == HELLORETRYREQUEST_HASH:
+            self.hello_retry_request = True
         pos += 32
         self.session_id = unpack_bytes(raw, pos, 1)
         pos += 1 + len(self.session_id)
@@ -79,3 +88,12 @@ class ServerHello(Handshake):
              + f"  CipherSuite: {cipsuite_str}\n"  \
              + f"  Compression: {cmprss_str}\n"    \
              + "  Extensions:\n" + ext_str
+
+
+class HelloRetryRequest(ServerHello):
+    def __init__(self):
+        super().__init__()
+        # RFC8446 4.1.3
+        # Note: random should be sha256 hash of "HelloRetryRequest"
+        self.random = HELLORETRYREQUEST_HASH
+        self.hello_retry_request = True
