@@ -55,6 +55,9 @@
 **Montgomery curves and the Montgomery ladder (PDF)**  
 `https://eprint.iacr.org/2017/293.pdf`
 
+**SECG - Standard Curve Database**  
+`https://neuromancer.sk/std/secg/`
+
 ## Modular arithmetics
 
 **Modular Inverse**  

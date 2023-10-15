@@ -32,14 +32,15 @@ class KeyShare(Extension):
 
     def pack_extension_content(self):
         if self.handshake_type == 1:
-            content = (pack_u16(n.group) + pack_bytes(n.key_exchange, 2) for n in self.shares)
+            content = (pack_u16(n.group) + pack_bytes(bytes(n.key_exchange), 2) for n in self.shares)
             return pack_bytes_list(content, 2)
         elif self.handshake_type == 2:
-            key_exchange = self.shares[0]
+            share = self.shares[0]
             if not self.hello_retry_request:
-                return pack_u16(key_exchange.group) + pack_bytes(key_exchange.key_exchange, 2)
+                key_exchange = bytes(share.key_exchange)
+                return pack_u16(share.group) + pack_bytes(key_exchange, 2)
             else:
-                return pack_u16(key_exchange.group)
+                return pack_u16(share.group)
         else:
             raise TypeError(f"Don't know, how to pack `KeyShare` for handshake type {self.handshake_type}")
 

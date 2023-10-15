@@ -50,12 +50,13 @@ def Weierstrass(*, a, b, p):
             py = M(self.y)
             qx = M(q.x)
             qy = M(q.y)
+            a = M(self.a)
             if px != qx:
                 # slope is a line through P and Q
                 s = (py - qy) / (px - qx)
             elif py == qy: # P == Q
                 # slope is the tangent
-                s = (3 * px * px + self.a) / (2 * py)
+                s = (3 * px * px + a) / (2 * py)
             else: # slope is vertical, sum is infinity
                 return _EC(0, 0)
 
@@ -63,7 +64,7 @@ def Weierstrass(*, a, b, p):
             y = s * (qx - x) - qy
             return _EC(int(x), int(y))
 
-        def __rmul__(self, n: int) -> ECPoint:
+        def __rmul__(self, n: int):
             q = _EC(self)
             p = None
             while n:
