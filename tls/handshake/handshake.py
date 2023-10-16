@@ -8,8 +8,8 @@ from tls.extension import Extension, pack_extension_list, unpack_extension_list
 #>from tls.supported_extensions import _EXTENSION_HANDLERS
 
 class Handshake(Record):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
         self.record_type = 22
         self.handshake_type = 0
         self.extensions = []
@@ -33,6 +33,7 @@ class Handshake(Record):
     def add_extension(self, extension: Extension) -> None:
         extension.handshake_type = self.handshake_type
         self.extensions.append(extension)
+        debug(3, self.debug_level, f"Extension {type(extension).__name__} added")
 
     def pack_extensions(self) -> bytes:
         return pack_extension_list(self.extensions, 2)

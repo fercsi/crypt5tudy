@@ -2,12 +2,15 @@
 
 from abc import ABC, abstractmethod
 import tls
+from .util import debug
 
 class Connect(ABC):
-    def __init__(self, *, hostname: str, port: int = 443, timeout: float = 30.0):
+    def __init__(self, *, hostname: str, port: int = 443, timeout: float = 30.0, debug_level: int = 0):
         self.hostname = hostname
         self.port = port
         self.timeout = timeout
+        self.debug_level = debug_level
+        debug(2, debug_level, f"Connection parameters: {hostname}:{port}, timeout: {timeout}")
         self.decrypt_received = False
         self.encrypt_sending = False
         self.socket = None
@@ -49,7 +52,7 @@ class Connect(ABC):
 
     def receive_record(self) -> tls.Record:
         record_pack = self.receive_pack()
-        record = tls.unpack_record(record_pack)
+        record = tls.unpack_record(record_pack, debug_level=self.debug_level)
         if isinstance(record, tls.ApplicationData) and self.decrypt_received:
             crs = self.crypto_suite
             cs = crs.cipher_suite
@@ -83,4 +86,5 @@ class Connect(ABC):
                 raise BrokenPipeError("Error receiving data")
             cnt -= len(read)
             data += read
+        debug(4, self.debug_level, f"{len(data)} bytes TCP data received")
         return data

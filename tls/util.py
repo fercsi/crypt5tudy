@@ -1,10 +1,19 @@
 #!/usr/bin/python3
 
 import struct
+import sys
 from secrets import token_bytes
 
 def random_bytes(size: int) -> bytes:
     return token_bytes(size)
+
+def debug(level, current, *args, **kwargs):
+    """Show infirmation per debug level
+
+    util.debug(3, self.debug_level, f'Parameter is {param}')
+    """
+    if level <= current:
+        print(f'#[{level}]', *args, file=sys.stderr, **kwargs)
 
 # Pack constructs
 

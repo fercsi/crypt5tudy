@@ -5,9 +5,10 @@ import struct
 from .util import *
 
 class Record:
-    def __init__(self):
+    def __init__(self, *, debug_level:int = 0):
         self.record_type = 0
         self.record_tlsversion = 0x0303
+        self.debug_level = debug_level
 
     def pack(self) -> bytes:
         type = bytes([self.record_type])

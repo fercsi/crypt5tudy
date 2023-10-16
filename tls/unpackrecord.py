@@ -16,10 +16,10 @@ _RECORD_HANDLERS = {
     23: ApplicationData,
     }
 
-def unpack_record(raw: bytes) -> Record:
-    return unpack_records(raw, 1)[0]
+def unpack_record(raw: bytes, *, debug_level: int = 0) -> Record:
+    return unpack_records(raw, 1, debug_level=debug_level)[0]
 
-def unpack_records(raw: bytes, limit: int = 0) -> [Record]:
+def unpack_records(raw: bytes, limit: int = 0, *, debug_level: int = 0) -> [Record]:
     pos = 0
     records = []
     if limit == 0:
@@ -41,6 +41,7 @@ def unpack_records(raw: bytes, limit: int = 0) -> [Record]:
                 record = UnknownHandshake(handshake_type)
             else:
                 record = handshake_handler()
+        record.debug_level = debug_level
         record.record_tlsversion = record_tlsversion
         record.unpack(record_content)
         records.append(record)

@@ -11,6 +11,7 @@ from .ecdh import ECDH
 from .ffdh import FFDH
 from .groupinfo import *
 from .keyexchange import KeyExchange
+from .util import debug
 
 class Client(Connect):
     """
@@ -21,11 +22,15 @@ class Client(Connect):
     def __init__(self, *,
             hostname: str, port: int = 443, timeout: float = 30.0,
             key_share_group: str = 'x25519',
-            mode: str = 't'
+            mode: str = 't',
+            debug_level: int = 0,
         ):
-        super().__init__(hostname=hostname, port=port, timeout=timeout)
+        debug(1, debug_level, f"Initialize TLS connection...")
+        super().__init__(hostname=hostname, port=port, timeout=timeout,
+                                                     debug_level=debug_level)
         self.set_group_info(key_share_group)
         self.text_mode = mode == 't'
+        debug(2, debug_level, f"Set mode to {'text' if mode == 't' else 'binary'}")
         self.session_tickets = []
 
     def set_group_info(self, group_info: int|str|tuple):
@@ -35,6 +40,7 @@ class Client(Connect):
             self.group_info = GROUP_INFO_BY_ID[group_info]
         elif isinstance(group_info, (WeierstrassGroup, MontgomeryGroup, FFDHGroup)):
             self.group_info = group_info
+        debug(2, self.debug_level, f"Key Share Group parameters: {self.group_info}")
 
         if isinstance(self.group_info, FFDHGroup): # Finite field
             self.key_manager = FFDH(self.group_info)
@@ -42,26 +48,34 @@ class Client(Connect):
             self.key_manager = ECDH(self.group_info)
 
     def connect(self):
+        debug(1, self.debug_level, "Send client_hello...")
         self.send_client_hello()
+        debug(1, self.debug_level, "Process server response...")
         self.process_server_response()
+        debug(1, self.debug_level, "Client finishes handshake...")
         self.finish_client_handshake()
+        debug(1, self.debug_level, "Handshake finished")
 
     def send(self, text: bytes|str):
         if isinstance(text, str):
             text = text.encode()
         self.send_record(tls.ApplicationData(text))
+        debug(1, self.debug_level, f"{len(text)} bytes TLS data sent")
 
     def receive(self) -> bytes|str:
         while True:
             record = self.receive_record()
+            eecord.debug_level = self.debug_level
             if isinstance(record, tls.Alert): # Fatal alerts killed the app by now
-                print(f"Server reported warning: {record.error_str()}")
+                debug(0, 0, f"Server reported warning: {record.error_str()}")
             elif isinstance(record, tls.Handshake):
                 self.process_handshake(record)
             elif isinstance(record, tls.ChangeCipherSpec):
+                debug(1, self.debug_level, f"change_cipher_spec received")
                 self.decrypt_received = True
             elif isinstance(record, tls.ApplicationData):
                 text = record.content
+                debug(1, self.debug_level, f"{len(text)} bytes TLS data received")
                 if self.text_mode:
                     text = text.decode()
                 return text
@@ -79,6 +93,7 @@ class Client(Connect):
         goon = True
         while goon:
             record = self.receive_record()
+            record.debug_level = self.debug_level
             if isinstance(record, tls.Alert): # Fatal alerts killed the app by now
                 print(f"Server reported warning: {record.error_str()}")
             elif isinstance(record, tls.Handshake):
@@ -161,6 +176,7 @@ class Client(Connect):
         else:
             raise NotImplementedError(f'Unknown handshake record received {record.handshake_type}')
         self.handshakes.append(record_content)
+        debug(1, self.debug_level, f"Handshake message {type(record).__name__} received")
 
     def mk_client_hello(self):
         ch = tls.ClientHello([
