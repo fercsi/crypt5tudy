@@ -8,6 +8,7 @@ import crypto
 from .connect import Connect
 from .record import Record
 from .ecdh import ECDH
+from .ffdh import FFDH
 from .groupinfo import *
 from .keyexchange import KeyExchange
 
@@ -36,8 +37,7 @@ class Client(Connect):
             self.group_info = group_info
 
         if isinstance(self.group_info, FFDHGroup): # Finite field
-#>            self.key_manager = FFDH(group)
-            pass
+            self.key_manager = FFDH(self.group_info)
         else: # Elliptic curve group
             self.key_manager = ECDH(self.group_info)
 
