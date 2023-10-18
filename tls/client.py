@@ -56,42 +56,6 @@ class Client(Connect):
         self.finish_client_handshake()
         debug(1, self.debug_level, "Handshake finished")
 
-    def send(self, text: bytes|str):
-        if isinstance(text, str):
-            text = text.encode()
-        self.send_message(tls.ApplicationData(text))
-        debug(1, self.debug_level, f"{len(text)} bytes TLS data sent")
-
-    def receive(self) -> bytes|str:
-        while len(self.application_data) == 0:
-            self.receive_record()
-        # TODO: how many bytes
-        if self.text_mode:
-            application_data = (self.application_data).decode()
-        else:
-            application_data = bytes(self.application_data)
-        self.application_data = bytearray()
-        return application_data
-#>        while True:
-#>            message = self.receive_message()
-#>            message.debug_level = self.debug_level
-#>            if isinstance(message, tls.Alert): # Fatal alerts killed the app by now
-#>                debug(0, 0, f"Server reported warning: {message.error_str()}")
-#>            elif isinstance(message, tls.Handshake):
-#>                self.process_handshake(message)
-#>            elif isinstance(message, tls.ChangeCipherSpec):
-#>                debug(1, self.debug_level, f"change_cipher_spec received")
-#>                self.decrypt_received = True
-#>            elif isinstance(message, tls.ApplicationData):
-#>                text = message.content
-#>                debug(1, self.debug_level, f"{len(text)} bytes TLS data received")
-#>                if self.text_mode:
-#>                    text = text.decode()
-#>                return text
-#>            else:
-#>#>                print(message)
-#>                raise NotImplementedError(f"Message type {message.message_type:0>2x} not implemented")
-
     def send_client_hello(self) -> None:
         self.socket = socket.create_connection((self.hostname, self.port), self.timeout)
         client_hello = self.mk_client_hello()

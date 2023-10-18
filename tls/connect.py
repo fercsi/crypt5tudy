@@ -35,6 +35,29 @@ class Connect(ABC):
                 pass
             self.socket = None
 
+    def send(self, text: bytes|str):
+        if isinstance(text, str):
+            text = text.encode()
+        self.send_message(tls.ApplicationData(text))
+        debug(1, self.debug_level, f"{len(text)} bytes TLS data sent")
+
+    def receive(self, size: int = 0) -> bytes|str:
+        if size:
+            while len(self.application_data) < size:
+                self.receive_record()
+            application_data = self.application_data[:size]
+            self.application_data = self.application_data[size:]
+        else:
+            while len(self.application_data) == 0:
+                self.receive_record()
+            application_data = self.application_data
+            self.application_data = bytearray()
+        if self.text_mode:
+            application_data = (application_data).decode()
+        else:
+            application_data = bytes(application_data)
+        return application_data
+
     def prepare_message(self, message: tls.Message) -> bytes:
         raw_content = message.pack()
         if self.encrypt_sending:
