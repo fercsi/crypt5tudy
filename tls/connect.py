@@ -1,7 +1,9 @@
 #!/usr/bin/python3
 
 from abc import ABC, abstractmethod
+from queue import Queue
 import tls
+from .types import ContentType
 from .util import *
 
 class Connect(ABC):
@@ -14,6 +16,9 @@ class Connect(ABC):
         self.decrypt_received = False
         self.encrypt_sending = False
         self.socket = None
+        self.handshake_fragments = bytearray()
+        self.application_data = bytearray()
+        self.message_queue = Queue()
 
     def __del__(self):
         self.disconnect()
@@ -51,34 +56,74 @@ class Connect(ABC):
         self.socket.sendall(content)
 
     def receive_message(self) -> tls.Message:
-        record = self.receive_pack()
-        # TODO: Now assume, that 1 record is 1 message
-        content_type = unpack_u8(record)
-        length = unpack_u16(record, 3)
-        message = tls.unpack_message(content_type, record, 5, length, debug_level=self.debug_level)
-        if isinstance(message, tls.ApplicationData) and self.decrypt_received:
+        while self.message_queue.empty():
+            self.receive_record()
+        return self.message_queue.get()
+#>        record = self.receive_record()
+#>        # TODO: Now assume, that 1 record is 1 message
+#>        content_type = unpack_u8(record)
+#>        length = unpack_u16(record, 3)
+#>        message = tls.unpack_message(content_type, record, 5, length, debug_level=self.debug_level)
+#>        if isinstance(message, tls.ApplicationData) and self.decrypt_received:
+#>            crs = self.crypto_suite
+#>            cs = crs.cipher_suite
+#>            cipher_text = message.content[:-cs.t_len]
+#>            auth_data = record[:5]
+#>            auth_tag_received = message.content[-cs.t_len:]
+#>            plain_text, auth_tag_calculated = crs.aead.decrypt(cipher_text, auth_data)
+#>            if auth_tag_received != auth_tag_calculated:
+#>                raise KeyError('Key negotiation failed')
+#>            content_type = unpack_u8(plain_text[-1:])
+#>            content = plain_text[:-1]
+#>            content_length = len(plain_text)
+#>            message = tls.unpack_message(content_type, content, debug_level=self.debug_level)
+#>        if isinstance(message, tls.Alert):
+#>            if message.is_fatal():
+#>                self.disconnect()
+#>                raise ConnectionAbortedError(f"Server reported fatal error: {message.error_str()}")
+#>        return message
+
+    def receive_record(self) -> bytes:
+        record_head = self.receive_bytes(5)
+        content_type = unpack_u8(record_head)
+        length = unpack_u16(record_head, 3)
+        fragment = self.receive_bytes(length)
+        if content_type == ContentType.application_data and self.decrypt_received:
             crs = self.crypto_suite
             cs = crs.cipher_suite
-            cipher_text = message.content[:-cs.t_len]
-            auth_data = record[:5]
-            auth_tag_received = message.content[-cs.t_len:]
+            cipher_text = fragment[:-cs.t_len]
+            auth_data = record_head
+            auth_tag_received = fragment[-cs.t_len:]
             plain_text, auth_tag_calculated = crs.aead.decrypt(cipher_text, auth_data)
             if auth_tag_received != auth_tag_calculated:
                 raise KeyError('Key negotiation failed')
             content_type = unpack_u8(plain_text[-1:])
-            content = plain_text[:-1]
-            content_length = len(plain_text)
-            message = tls.unpack_message(content_type, content, debug_level=self.debug_level)
-        if isinstance(message, tls.Alert):
-            if message.is_fatal():
-                self.disconnect()
-                raise ConnectionAbortedError(f"Server reported fatal error: {message.error_str()}")
-        return message
+            fragment = plain_text[:-1]
+            length = len(fragment)
 
-    def receive_pack(self) -> bytes:
-        head = self.receive_bytes(5)
-        body = self.receive_bytes(int.from_bytes(head[3:], 'big'))
-        return head + body
+        pos = 0
+        if content_type == ContentType.handshake:
+            self.handshake_fragments += fragment
+            hs_fragment_length = len(self.handshake_fragments)
+            while pos < hs_fragment_length:
+                if pos + 4 > hs_fragment_length:
+                    break
+                hs_length = unpack_u24(self.handshake_fragments, pos+1)
+                if pos + 4 + hs_length > hs_fragment_length:
+                    break
+                message = tls.unpack_message(content_type, self.handshake_fragments, pos, hs_length+4, debug_level=self.debug_level)
+                self.message_queue.put(message)
+                pos += 4 + hs_length
+            self.handshake_fragments = self.handshake_fragments[pos:]
+        elif content_type == ContentType.application_data:
+            self.application_data += fragment
+        elif content_type == ContentType.alert:
+            while pos < length:
+                message = tls.unpack_message(content_type, fragment, pos, 2, debug_level=self.debug_level)
+                self.message_queue.put(message)
+                pos += 2
+        else: # change_cipher_spec messages are eliminated, too
+            pass
 
     def receive_bytes(self, cnt: int = 65536) -> bytes:
         data = b''

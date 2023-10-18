@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-from .extension import Extension
+from .extension import Extension, UnknownExtension
 from ..supported_extensions import _EXTENSION_HANDLERS
 from ..util import *
 
