@@ -58,30 +58,8 @@ class Connect(ABC):
     def receive_message(self) -> tls.Message:
         while self.message_queue.empty():
             self.receive_record()
-        return self.message_queue.get()
-#>        record = self.receive_record()
-#>        # TODO: Now assume, that 1 record is 1 message
-#>        content_type = unpack_u8(record)
-#>        length = unpack_u16(record, 3)
-#>        message = tls.unpack_message(content_type, record, 5, length, debug_level=self.debug_level)
-#>        if isinstance(message, tls.ApplicationData) and self.decrypt_received:
-#>            crs = self.crypto_suite
-#>            cs = crs.cipher_suite
-#>            cipher_text = message.content[:-cs.t_len]
-#>            auth_data = record[:5]
-#>            auth_tag_received = message.content[-cs.t_len:]
-#>            plain_text, auth_tag_calculated = crs.aead.decrypt(cipher_text, auth_data)
-#>            if auth_tag_received != auth_tag_calculated:
-#>                raise KeyError('Key negotiation failed')
-#>            content_type = unpack_u8(plain_text[-1:])
-#>            content = plain_text[:-1]
-#>            content_length = len(plain_text)
-#>            message = tls.unpack_message(content_type, content, debug_level=self.debug_level)
-#>        if isinstance(message, tls.Alert):
-#>            if message.is_fatal():
-#>                self.disconnect()
-#>                raise ConnectionAbortedError(f"Server reported fatal error: {message.error_str()}")
-#>        return message
+        message = self.message_queue.get()
+        return message
 
     def receive_record(self) -> bytes:
         record_head = self.receive_bytes(5)
