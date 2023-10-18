@@ -2,7 +2,7 @@
 # RFC8446 (RFC5246) No affect in TLS1.3
 
 from tls.util import *
-from tls.record import Record
+from tls.message import Message
 
 LEVEL_IDS: dict[str, int] = {
     'warning': 1,
@@ -12,8 +12,8 @@ LEVEL_IDS: dict[str, int] = {
 DESCRIPTION_IDS: dict[str, int] = {
     'close_notify': 0,
     'unexpected_message': 10,
-    'bad_record_mac': 20,
-    'record_overflow': 22,
+    'bad_message_mac': 20,
+    'message_overflow': 22,
     'handshake_failure': 40,
     'bad_certificate': 42,
     'unsupported_certificate': 43,
@@ -39,10 +39,10 @@ DESCRIPTION_IDS: dict[str, int] = {
     'no_application_protocol': 120,
     }
 
-class Alert(Record):
+class Alert(Message):
     def __init__(self, level: int|str = 0, description: int|str = 0):
         super().__init__()
-        self.record_type = 21
+        self.message_type = 21
         self.set_level(level)
         self.set_description(description)
 
@@ -60,10 +60,10 @@ class Alert(Record):
         n = description
         self.description = DESCRIPTION_IDS[n] if isinstance(n, str) else n
 
-    def pack_record_content(self) -> bytes:
+    def pack_message_content(self) -> bytes:
         return pack_u8(self.level) + pack_u8(self.description)
 
-    def unpack_record_content(self, raw: bytes) -> None:
+    def unpack_message_content(self, raw: bytes) -> None:
         self.level = unpack_u8(raw, 0)
         self.description = unpack_u8(raw, 1)
 

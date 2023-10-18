@@ -24,7 +24,7 @@ class KeyShare(Extension):
         """Add group/key_exhange pair to KeyShare
 
         Note, that key_exchange might be missing in case of a `HelloRetryRequest`
-        handshake records.
+        handshake messages.
         """
         if isinstance(group, str):
             group = GROUP_IDS[group]
@@ -44,11 +44,11 @@ class KeyShare(Extension):
         else:
             raise TypeError(f"Don't know, how to pack `KeyShare` for handshake type {self.handshake_type}")
 
-    def unpack_extension_content(self, raw, *, record=None):
+    def unpack_extension_content(self, raw, *, message=None):
         if self.handshake_type == 1:
             key_share = unpack_bytes_list(raw, 0, 0, 2)
         elif self.handshake_type == 2:
-            if record and record.hello_retry_request:
+            if message and message.hello_retry_request:
                 group = unpack_u16(raw, 0)
                 self.add(group)
                 return

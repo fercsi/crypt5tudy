@@ -2,7 +2,7 @@
 
 from abc import ABC, abstractmethod
 import tls
-from .util import debug
+from .util import *
 
 class Connect(ABC):
     def __init__(self, *, hostname: str, port: int = 443, timeout: float = 30.0, debug_level: int = 0):
@@ -30,48 +30,50 @@ class Connect(ABC):
                 pass
             self.socket = None
 
-    def prepare_record(self, record: tls.Record) -> bytes:
-        raw_content = record.pack()
+    def prepare_message(self, message: tls.Message) -> bytes:
+        raw_content = message.pack()
         if self.encrypt_sending:
             crs = self.crypto_suite
             cs = crs.cipher_suite
             plain_text = raw_content[5:] + raw_content[:1]
             new_length = len(plain_text) + cs.t_len
-            record_head = b'\x17' + raw_content[1:3] + new_length.to_bytes(2, 'big')
-            cipher_text, auth_tag = crs.aead.encrypt(plain_text, record_head)
-            raw_content = record_head + cipher_text + auth_tag
+            message_head = b'\x17' + raw_content[1:3] + new_length.to_bytes(2, 'big')
+            cipher_text, auth_tag = crs.aead.encrypt(plain_text, message_head)
+            raw_content = message_head + cipher_text + auth_tag
         return raw_content
 
-    def send_record(self, record: tls.Record) -> bytes:
-        raw_content = self.prepare_record(record)
+    def send_message(self, message: tls.Message) -> bytes:
+        raw_content = self.prepare_message(message)
         self.send_pack(raw_content)
         return raw_content
 
     def send_pack(self, content: bytes) -> None:
         self.socket.sendall(content)
 
-    def receive_record(self) -> tls.Record:
-        record_pack = self.receive_pack()
-        record = tls.unpack_record(record_pack, debug_level=self.debug_level)
-        if isinstance(record, tls.ApplicationData) and self.decrypt_received:
+    def receive_message(self) -> tls.Message:
+        record = self.receive_pack()
+        # TODO: Now assume, that 1 record is 1 message
+        content_type = unpack_u8(record)
+        length = unpack_u16(record, 3)
+        message = tls.unpack_message(content_type, record, 5, length, debug_level=self.debug_level)
+        if isinstance(message, tls.ApplicationData) and self.decrypt_received:
             crs = self.crypto_suite
             cs = crs.cipher_suite
-            cipher_text = record.content[:-cs.t_len]
-            auth_data = record.raw_content[:5]
-            auth_tag_received = record.content[-cs.t_len:]
+            cipher_text = message.content[:-cs.t_len]
+            auth_data = record[:5]
+            auth_tag_received = message.content[-cs.t_len:]
             plain_text, auth_tag_calculated = crs.aead.decrypt(cipher_text, auth_data)
             if auth_tag_received != auth_tag_calculated:
                 raise KeyError('Key negotiation failed')
-            record_content_length = len(plain_text) - 1
-            record_head = plain_text[-1:] + record.raw_content[1:3] \
-                                    + record_content_length.to_bytes(2, 'big')
-            record_content = plain_text[:-1]
-            record = tls.unpack_record(record_head + record_content)
-        if isinstance(record, tls.Alert):
-            if record.is_fatal():
+            content_type = unpack_u8(plain_text[-1:])
+            content = plain_text[:-1]
+            content_length = len(plain_text)
+            message = tls.unpack_message(content_type, content, debug_level=self.debug_level)
+        if isinstance(message, tls.Alert):
+            if message.is_fatal():
                 self.disconnect()
-                raise ConnectionAbortedError(f"Server reported fatal error: {record.error_str()}")
-        return record
+                raise ConnectionAbortedError(f"Server reported fatal error: {message.error_str()}")
+        return message
 
     def receive_pack(self) -> bytes:
         head = self.receive_bytes(5)

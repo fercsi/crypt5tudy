@@ -6,7 +6,7 @@ import tls
 import crypto
 
 from .connect import Connect
-from .record import Record
+from .message import Message
 from .ecdh import ECDH
 from .ffdh import FFDH
 from .groupinfo import *
@@ -59,63 +59,63 @@ class Client(Connect):
     def send(self, text: bytes|str):
         if isinstance(text, str):
             text = text.encode()
-        self.send_record(tls.ApplicationData(text))
+        self.send_message(tls.ApplicationData(text))
         debug(1, self.debug_level, f"{len(text)} bytes TLS data sent")
 
     def receive(self) -> bytes|str:
         while True:
-            record = self.receive_record()
-            eecord.debug_level = self.debug_level
-            if isinstance(record, tls.Alert): # Fatal alerts killed the app by now
-                debug(0, 0, f"Server reported warning: {record.error_str()}")
-            elif isinstance(record, tls.Handshake):
-                self.process_handshake(record)
-            elif isinstance(record, tls.ChangeCipherSpec):
+            message = self.receive_message()
+            message.debug_level = self.debug_level
+            if isinstance(message, tls.Alert): # Fatal alerts killed the app by now
+                debug(0, 0, f"Server reported warning: {message.error_str()}")
+            elif isinstance(message, tls.Handshake):
+                self.process_handshake(message)
+            elif isinstance(message, tls.ChangeCipherSpec):
                 debug(1, self.debug_level, f"change_cipher_spec received")
                 self.decrypt_received = True
-            elif isinstance(record, tls.ApplicationData):
-                text = record.content
+            elif isinstance(message, tls.ApplicationData):
+                text = message.content
                 debug(1, self.debug_level, f"{len(text)} bytes TLS data received")
                 if self.text_mode:
                     text = text.decode()
                 return text
             else:
-#>                print(record)
-                raise NotImplementedError(f"Record type {record.record_type:0>2x} not implemented")
+#>                print(message)
+                raise NotImplementedError(f"Message type {message.message_type:0>2x} not implemented")
 
     def send_client_hello(self) -> None:
         self.socket = socket.create_connection((self.hostname, self.port), self.timeout)
         client_hello = self.mk_client_hello()
-        content = self.send_record(client_hello)[5:]
+        content = self.send_message(client_hello)[5:]
         self.handshakes = [content]
 
     def process_server_response(self) -> None:
         goon = True
         while goon:
-            record = self.receive_record()
-            record.debug_level = self.debug_level
-            if isinstance(record, tls.Alert): # Fatal alerts killed the app by now
-                print(f"Server reported warning: {record.error_str()}")
-            elif isinstance(record, tls.Handshake):
-                self.process_handshake(record)
-                if isinstance(record, tls.Finished):
+            message = self.receive_message()
+            message.debug_level = self.debug_level
+            if isinstance(message, tls.Alert): # Fatal alerts killed the app by now
+                print(f"Server reported warning: {message.error_str()}")
+            elif isinstance(message, tls.Handshake):
+                self.process_handshake(message)
+                if isinstance(message, tls.Finished):
                     goon = False
-            elif isinstance(record, tls.ChangeCipherSpec):
+            elif isinstance(message, tls.ChangeCipherSpec):
                 self.decrypt_received = True
-            elif isinstance(record, tls.ApplicationData):
+            elif isinstance(message, tls.ApplicationData):
                 raise ConnectionError('No data expected in handshaking phase')
             else:
-                raise NotImplementedError("Record type not implemented")
+                raise NotImplementedError("Message type not implemented")
 
     def finish_client_handshake(self) -> None:
         # SEND further client handshake messages
         # Change to encrypted mode
-        messages = self.prepare_record(tls.ChangeCipherSpec())
+        messages = self.prepare_message(tls.ChangeCipherSpec())
         self.encrypt_sending = True
 
         # Send "Client Finished"
         verify_data = self.key_exchange.client_finished_verify_data(self.handshakes)
-        messages += self.prepare_record(tls.Finished(verify_data))
+        messages += self.prepare_message(tls.Finished(verify_data))
 
         self.send_pack(messages)
         # Handshake finidhed
@@ -129,14 +129,14 @@ class Client(Connect):
         crs.set_my_nonce(kex.client_write_iv)
         crs.set_peer_nonce(kex.server_write_iv)
 
-    def process_handshake(self, record: Record) -> None:
-        record_content = record.raw_content[5:]
-        rec_type = type(record)
+    def process_handshake(self, message: Message) -> None:
+        message_content = message.raw_content
+        rec_type = type(message)
         if rec_type is tls.ServerHello:
-            self.cipher_suite = record.cipher_suite
+            self.cipher_suite = message.cipher_suite
             self.crypto_suite = crypto.CryptoSuite(self.cipher_suite)
             self.key_exchange = KeyExchange(self.crypto_suite)
-            for extension in record.extensions:
+            for extension in message.extensions:
                 ext_type = type(extension)
                 if ext_type is tls.SupportedVersions:
                     self.tls_version = extension.versions[0]
@@ -148,7 +148,7 @@ class Client(Connect):
             shared_secret = self.key_manager.create_secret(self.private_key, self.peer_public_key)
             kex = self.key_exchange
             crs = self.crypto_suite
-            kex.generate_handshake_keys(shared_secret, self.handshakes + [record_content])
+            kex.generate_handshake_keys(shared_secret, self.handshakes + [message_content])
             crs.set_my_key(kex.client_write_key)
             crs.set_peer_key(kex.server_write_key)
             crs.set_my_nonce(kex.client_write_iv)
@@ -164,19 +164,19 @@ class Client(Connect):
             pass
         elif rec_type is tls.Finished:
             verify_data = self.key_exchange.server_finished_verify_data(self.handshakes)
-            if record.verify_data != verify_data:
+            if message.verify_data != verify_data:
                 raise ConnectionError('Handshake verification failed')
         elif rec_type is tls.NewSessionTicket:
             self.session_tickets.append({
-                'lifetime': record.ticket_lifetime,
-                'age_add': record.ticket_age_add,
-                'nonce': record.ticket_nonce,
-                'ticket': record.ticket,
+                'lifetime': message.ticket_lifetime,
+                'age_add': message.ticket_age_add,
+                'nonce': message.ticket_nonce,
+                'ticket': message.ticket,
             })
         else:
-            raise NotImplementedError(f'Unknown handshake record received {record.handshake_type}')
-        self.handshakes.append(record_content)
-        debug(1, self.debug_level, f"Handshake message {type(record).__name__} received")
+            raise NotImplementedError(f'Unknown handshake message received {message.handshake_type}')
+        self.handshakes.append(message_content)
+        debug(1, self.debug_level, f"Handshake message {type(message).__name__} received")
 
     def mk_client_hello(self):
         ch = tls.ClientHello([

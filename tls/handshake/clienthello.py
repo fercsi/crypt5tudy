@@ -17,7 +17,7 @@ CS_IDS = {
 class ClientHello(Handshake):
     def __init__(self, cipher_suite: list|None = None):
         super().__init__()
-        self.record_tlsversion = 0x0301 # for rooter compatibility reasons!
+        self.message_tlsversion = 0x0301 # for rooter compatibility reasons!
         self.handshake_type = 1
         self.client_hello_tlsversion = 0x0303
         self.random = random_bytes(32)

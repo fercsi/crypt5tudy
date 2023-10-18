@@ -12,7 +12,7 @@ class KeyExchange():
         Parameters
         ----------
         messages : list of bytes
-            `client_hello` and `server_hello` messages (without 5 byte record
+            `client_hello` and `server_hello` messages (without 5 byte message
             headers)
         """
         hkdf = self.crypto_suite.hkdf
@@ -44,7 +44,7 @@ class KeyExchange():
         ----------
         messages : list of bytes
             All handshake messages between and including `client_hello` and
-            `server_finished` (without 5 byte record headers)
+            `server_finished` (without 5 byte message headers)
         """
         hkdf = self.crypto_suite.hkdf
         key_length = self.crypto_suite.key_length
@@ -70,7 +70,7 @@ class KeyExchange():
         ----------
         messages : list of bytes
             All handshake messages between and including `client_hello` and
-            `server_finished` (without 5 byte record headers)
+            `server_finished` (without 5 byte message headers)
         """
         hkdf = self.crypto_suite.hkdf
         hash_length = self.crypto_suite.hash_length

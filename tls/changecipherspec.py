@@ -2,18 +2,18 @@
 # RFC8446 (RFC5246) No affect in TLS1.3
 
 from tls.util import *
-from tls.record import Record
+from tls.message import Message
 
-class ChangeCipherSpec(Record):
+class ChangeCipherSpec(Message):
     def __init__(self):
         super().__init__()
-        self.record_type = 20
+        self.message_type = 20
         self.type = 1
 
-    def pack_record_content(self) -> bytes:
+    def pack_message_content(self) -> bytes:
         return pack_u8(self.type)
 
-    def unpack_record_content(self, raw: bytes) -> None:
+    def unpack_message_content(self, raw: bytes) -> None:
         self.type = unpack_u8(raw, 0)
 
     def represent(self) -> str:

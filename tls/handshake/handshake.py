@@ -2,19 +2,19 @@
 # RFC8446
 
 from tls.util import *
-from tls.record import Record
+from tls.message import Message
 from tls.extension import Extension, pack_extension_list, unpack_extension_list
 #>from tls.supported_extensions import *
 #>from tls.supported_extensions import _EXTENSION_HANDLERS
 
-class Handshake(Record):
+class Handshake(Message):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.record_type = 22
+        self.message_type = 22
         self.handshake_type = 0
         self.extensions = []
 
-    def pack_record_content(self) -> bytes:
+    def pack_message_content(self) -> bytes:
         type = pack_u8(self.handshake_type)
         content = pack_bytes(self.pack_handshake_content(), 3)
         return type +  content
@@ -22,7 +22,7 @@ class Handshake(Record):
     def pack_handshake_content(self) -> bytes:
         return b''
 
-    def unpack_record_content(self, raw: bytes) -> None:
+    def unpack_message_content(self, raw: bytes) -> None:
         self.handshake_type = unpack_u8(raw, 0)
         raw_content = unpack_bytes(raw, 1, 3)
         self.unpack_handshake_content(raw_content)
@@ -42,7 +42,7 @@ class Handshake(Record):
 
     def unpack_extensions(self, raw: bytes, pos: int) -> None:
         extensions = unpack_extension_list(raw, pos, self.handshake_type, 2,
-                                                                   record=self)
+                                                                   message=self)
         for extension in extensions:
             self.add_extension(extension)
 #>
