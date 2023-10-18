@@ -8,5 +8,7 @@ Own implementation of:
 
 Further algorithms to implement:
 
-- Weierstrass curves
+- ffdf
 - CHACHA20/POLY1305
+
+error messages
