@@ -5,23 +5,20 @@ from abc import ABC, ABCMeta, abstractmethod
 class MetaHashFunction(ABCMeta):
     def __new__(metacls, cls, bases, classdict, **kwargs):
         try:
-            block_size = classdict['block_size']
             digest_size = classdict['digest_size']
         except:
-            raise KeyError('properties block_size and digest_size must be presented')
+            raise KeyError('digest_size is missing')
         classdict['name'] = property(lambda _: cls)
-        classdict['block_size'] = property(lambda _: block_size)
         classdict['digest_size'] = property(lambda _: digest_size)
 
         try:
             init = classdict['init']
             update = classdict['update']
-            final = classdict['final']
+            final = classdict['digest']
         except:
             raise KeyError('methods init, update, final must be presented')
-        del classdict['init'], classdict['final']
+        del classdict['init']
         classdict['_init'] = init
-        classdict['digest'] = final
         classdict['hexdigest'] = lambda self: self.digest().hex()
         classdict['__init__'] = metacls.func_init
 
@@ -40,7 +37,6 @@ class MetaHashFunction(ABCMeta):
             self.update(data)
 
 class HashFunction(ABC, metaclass = MetaHashFunction):
-    block_size: int = 0
     digest_size: int = 0
 
     @abstractmethod
@@ -52,5 +48,5 @@ class HashFunction(ABC, metaclass = MetaHashFunction):
         pass
 
     @abstractmethod
-    def final(self) -> bytes:
+    def digest(self) -> bytes:
         pass

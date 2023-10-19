@@ -33,6 +33,11 @@
 **IBM Cipher suite definitions**  
 `https://www.ibm.com/docs/en/zos/2.5.0?topic=programming-cipher-suite-definitions#csdcwh__sign2and3`
 
+## Hashes
+
+**FIPS 180-2. Secure Hash Standard**  
+`https://csrc.nist.gov/files/pubs/fips/180-2/final/docs/fips180-2.pdf`
+
 ## HKDF
 
 **HKDF - Wikipedia**  
