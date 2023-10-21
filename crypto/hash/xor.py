@@ -5,6 +5,7 @@ from .hashfunction import HashFunction
 
 class xor8(HashFunction):
     digest_size: int = 1
+    block_size: int = 1
 
     _xor: int
 

@@ -1,10 +1,10 @@
 #!/usr/bin/python3
 
 from .ciphersuite import *
-from .hashfunctionfactory import hash_function_factory
 from .aead import AEAD
 from .aesgcm import AES_GCM
 from .hkdf import HKDF
+from .hash import Registry as HashRegistry
 
 class CryptoSuite:
     def __init__(self, cipher_suite: int|str|CipherSuite):
@@ -17,7 +17,9 @@ class CryptoSuite:
         self.setup_cipher_suite()
 
     def setup_cipher_suite(self):
-        self.hash_function = hash_function_factory.create(self.cipher_suite.hash)
+        self.hash_function = HashRegistry.get(self.cipher_suite.hash)
+        if self.hash_function is None:
+            raise NotImplementedError(f'Hash function {self.cipher_suite.hash} not implemented')
         self.hkdf = HKDF(self.hash_function)
         if self.cipher_suite.encryption == 'AES_GCM_13':
             self.aead = AES_GCM()

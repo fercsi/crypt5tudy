@@ -11,12 +11,7 @@ class HKDF:
     hash_size: int
 
     def __init__(self, hash_function: Callable|str):
-        if isinstance(hash_function, str):
-            self.hash_function = getattr(hashlib, hash_function.lower(), None)
-            if self.hash_function is None:
-                raise TypeError(f'Hash type "{hash_function}" is not supported')
-        else:
-            self.hash_function = hash_function
+        self.hash_function = hash_function
         self.hash_size = self.hash_function().digest_size
 
     def hmac_hash(self, key: bytes, data: bytes) -> bytes:

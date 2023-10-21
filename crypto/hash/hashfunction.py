@@ -1,30 +1,17 @@
 #!/usr/bin/python3
 
+import copy
 from abc import ABC, ABCMeta, abstractmethod
 
 class MetaHashFunction(ABCMeta):
     def __new__(metacls, cls, bases, classdict, **kwargs):
-#>        print('-'*40)
-#>        print(cls)
-#>        print(bases)
-#>        print(metacls._check_inheritance(bases))
-#>        metacls._check_mandatory_field(cls, bases, 'init')
-        try:
-            digest_size = classdict['digest_size']
-        except:
-            raise KeyError('digest_size is missing')
         classdict['name'] = property(lambda _: cls)
-        classdict['digest_size'] = property(lambda _: digest_size)
 
-#>        try:
-#>            init = classdict['init']
-#>            update = classdict['update']
-#>            final = classdict['digest']
-#>        except:
-#>            raise KeyError('methods init, update, final must be presented')
-#>        del classdict['init']
-#>        classdict['_init'] = init
+        metacls._create_property(cls, bases, classdict, 'digest_size')
+        metacls._create_property(cls, bases, classdict, 'block_size')
+
         classdict['hexdigest'] = lambda self: self.digest().hex()
+        classdict['copy'] = lambda self: copy.deepcopy(self)
         classdict['__init__'] = metacls.func_init
         classdict['_hash_function'] = True
 
@@ -43,20 +30,22 @@ class MetaHashFunction(ABCMeta):
             self.update(data)
 
     @classmethod
-    def _check_inheritance(_, bases):
-        for base in bases:
-            if getattr(base, '_hash_function', False):
-                return True
-        return False
-
-    @classmethod
-    def _check_mandatory_field(_, cls, bases, field):
+    def _create_property(_, cls, bases, classdict, field):
+        if field in classdict:
+            value = classdict[field]
+            classdict[field] = property(lambda _: value)
+            return
         for chain in bases:
             for base in chain.__mro__:
-                print(vars(base))
+                if getattr(base, '_hash_function', False):
+                    return
+                if hasattr(base, field):
+                    return
+        raise KeyError(field + ' is missing')
 
 class HashFunction(ABC, metaclass = MetaHashFunction):
-    digest_size: int = 0
+    digest_size: int = 1
+    block_size: int = 1
 
     @abstractmethod
     def init(self) -> None:

@@ -3,10 +3,12 @@
 
 import struct
 from .hashfunction import HashFunction
+from .registry import Registry
 
 class sha512(HashFunction):
     # 6.3
     digest_size: int = 64
+    block_size: int = 128
 
     _M: bytearray
     _l: int
@@ -125,3 +127,6 @@ def _sigma_0(x): # (4.12)
     return _ROTR(x, 1) ^ _ROTR(x, 8) ^ x >> 7
 def _sigma_1(x): # (4.13)
     return _ROTR(x, 19) ^ _ROTR(x, 61) ^ x >> 6
+
+Registry.add(sha384)
+Registry.add(sha512)

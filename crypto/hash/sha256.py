@@ -3,10 +3,12 @@
 
 import struct
 from .hashfunction import HashFunction
+from .registry import Registry
 
 class sha256(HashFunction):
     # 6.2
     digest_size: int = 32
+    block_size: int = 64
 
     _M: bytearray
     _l: int
@@ -113,3 +115,6 @@ def _sigma_0(x): # (4.6)
     return _ROTR(x, 7) ^ _ROTR(x, 18) ^ x >> 3
 def _sigma_1(x): # (4.7)
     return _ROTR(x, 17) ^ _ROTR(x, 19) ^ x >> 10
+
+Registry.add(sha224)
+Registry.add(sha256)
