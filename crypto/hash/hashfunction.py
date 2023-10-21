@@ -13,7 +13,7 @@ class MetaHashFunction(ABCMeta):
         classdict['hexdigest'] = lambda self: self.digest().hex()
         classdict['copy'] = lambda self: copy.deepcopy(self)
         classdict['__init__'] = metacls.func_init
-        classdict['_hash_function'] = True
+        classdict['_is_hash_function'] = True
 
         exc = None
         try:
@@ -24,8 +24,8 @@ class MetaHashFunction(ABCMeta):
             raise exc
         return hash_func
 
-    def func_init(self, data: bytes|None = None):
-        self.init()
+    def func_init(self, data: bytes|None = None, **kwargs):
+        self.init(**kwargs)
         if data is not None:
             self.update(data)
 
@@ -33,11 +33,16 @@ class MetaHashFunction(ABCMeta):
     def _create_property(_, cls, bases, classdict, field):
         if field in classdict:
             value = classdict[field]
-            classdict[field] = property(lambda _: value)
+            if value is None:
+                value_field = '_' + field
+                classdict[value_field] = None
+                classdict[field] = property(lambda self: getattr(self, value_field))
+            else:
+                classdict[field] = property(lambda _: value)
             return
         for chain in bases:
             for base in chain.__mro__:
-                if getattr(base, '_hash_function', False):
+                if getattr(base, '_is_hash_function', False):
                     return
                 if hasattr(base, field):
                     return

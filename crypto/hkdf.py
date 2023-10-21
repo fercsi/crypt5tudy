@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 # RFC5869
 
-import hashlib
-import hmac
+from .hash import hmac
 import struct
 from typing import Callable
 
@@ -15,8 +14,7 @@ class HKDF:
         self.hash_size = self.hash_function().digest_size
 
     def hmac_hash(self, key: bytes, data: bytes) -> bytes:
-        # RFC2104
-        return hmac.new(key, data, self.hash_function).digest()
+        return hmac(data, key=key, hash_function=self.hash_function).digest()
 
     def extract(self, salt: bytes|None, ikm: bytes) -> bytes:
         if salt is None:
