@@ -11,6 +11,11 @@
 **A Readable Specification of TLS 1.3**  
 `https://davidwong.fr/tls13/`
 
+## Encryption
+
+**NIST FIPS 197. Advanced Encryption Standard (AES)**  
+`https://nvlpubs.nist.gov/nistpubs/fips/nist.fips.197.pdf`
+
 ## GCM
 
 **The Galois/Counter Mode of Operation (GCM) (PDF)**  
@@ -35,21 +40,27 @@
 
 ## Hashes
 
-**FIPS 180-2. Secure Hash Standard**  
+**NIST FIPS 180-2. Secure Hash Standard**  
 `https://csrc.nist.gov/files/pubs/fips/180-2/final/docs/fips180-2.pdf`
+
+**NIST FIPS 202. SHA 3 Standard**  
+https://doi.org/10.6028/NIST.FIPS.202
+
+**RFC3874 - A 224-bit One-way Hash Function: SHA-224**  
+``https://datatracker.ietf.org/doc/html/rfc3874``
 
 ## HKDF
 
 **HKDF - Wikipedia**  
 `https://en.wikipedia.org/wiki/HKDF`
 
-**HMAC - Wikipedia**  
-`https://en.wikipedia.org/wiki/HMAC`
+**HMAC: Keyed-Hashing for Message Authentication**  
+`https://tools.ietf.org/html/RFC2104`
 
-## EC
+## Elliptic Curves
 
 **RFC7748 - Elliptic Curves for Security**  
-`https://tools.ietf.org/html/rfc7748`
+`https://datatracker.ietf.org/doc/html/rfc7748`
 
 **RFC7748 - Errata**  
 `https://www.rfc-editor.org/errata_search.php?rfc=7748`
