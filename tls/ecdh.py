@@ -2,7 +2,7 @@
 
 import secrets
 from crypto import ec
-from .util import *
+from util.serialize import *
 from .groupinfo import WeierstrassGroup, MontgomeryGroup
 
 def ECDH(group: WeierstrassGroup|MontgomeryGroup):

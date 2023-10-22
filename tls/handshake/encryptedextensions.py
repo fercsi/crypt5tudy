@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 # RFC8446
 
-from tls.util import *
+from util.serialize import *
 from .handshake import Handshake
 
 class EncryptedExtensions(Handshake):

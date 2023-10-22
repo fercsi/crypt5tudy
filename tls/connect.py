@@ -4,15 +4,16 @@ from abc import ABC, abstractmethod
 from queue import Queue
 import tls
 from .types import ContentType
-from .util import *
+from util.serialize import *
+from util.verbose import *
 
 class Connect(ABC):
-    def __init__(self, *, hostname: str, port: int = 443, timeout: float = 30.0, debug_level: int = 0):
+    def __init__(self, *, hostname: str, port: int = 443, timeout: float = 30.0, verbosity: int = 0):
         self.hostname = hostname
         self.port = port
         self.timeout = timeout
-        self.debug_level = debug_level
-        debug(2, debug_level, f"Connection parameters: {hostname}:{port}, timeout: {timeout}")
+        self.verbosity = verbosity
+        verbose(2, verbosity, f"Connection parameters: {hostname}:{port}, timeout: {timeout}")
         self.decrypt_received = False
         self.encrypt_sending = False
         self.socket = None
@@ -39,7 +40,7 @@ class Connect(ABC):
         if isinstance(text, str):
             text = text.encode()
         self.send_message(tls.ApplicationData(text))
-        debug(1, self.debug_level, f"{len(text)} bytes TLS data sent")
+        verbose(1, self.verbosity, f"{len(text)} bytes TLS data sent")
 
     def receive(self, size: int = 0) -> bytes|str:
         if size:
@@ -112,7 +113,7 @@ class Connect(ABC):
                 hs_length = unpack_u24(self.handshake_fragments, pos+1)
                 if pos + 4 + hs_length > hs_fragment_length:
                     break
-                message = tls.unpack_message(content_type, self.handshake_fragments, pos, hs_length+4, debug_level=self.debug_level)
+                message = tls.unpack_message(content_type, self.handshake_fragments, pos, hs_length+4, verbosity=self.verbosity)
                 self.message_queue.put(message)
                 pos += 4 + hs_length
             self.handshake_fragments = self.handshake_fragments[pos:]
@@ -120,7 +121,7 @@ class Connect(ABC):
             self.application_data += fragment
         elif content_type == ContentType.alert:
             while pos < length:
-                message = tls.unpack_message(content_type, fragment, pos, 2, debug_level=self.debug_level)
+                message = tls.unpack_message(content_type, fragment, pos, 2, verbosity=self.verbosity)
                 self.message_queue.put(message)
                 pos += 2
         else: # change_cipher_spec messages are eliminated, too
@@ -134,5 +135,5 @@ class Connect(ABC):
                 raise BrokenPipeError("Error receiving data")
             cnt -= len(read)
             data += read
-        debug(4, self.debug_level, f"{len(data)} bytes TCP data received")
+        verbose(4, self.verbosity, f"{len(data)} bytes TCP data received")
         return data

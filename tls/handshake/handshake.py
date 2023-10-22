@@ -1,7 +1,8 @@
 #!/usr/bin/python3
 # RFC8446
 
-from tls.util import *
+from util.serialize import *
+from util.verbose import *
 from tls.message import Message
 from tls.extension import Extension, pack_extension_list, unpack_extension_list
 #>from tls.supported_extensions import *
@@ -33,7 +34,7 @@ class Handshake(Message):
     def add_extension(self, extension: Extension) -> None:
         extension.handshake_type = self.handshake_type
         self.extensions.append(extension)
-        debug(3, self.debug_level, f"Extension {type(extension).__name__} added")
+        verbose(3, self.verbosity, f"Extension {type(extension).__name__} added")
 
     def pack_extensions(self) -> bytes:
         return pack_extension_list(self.extensions, 2)

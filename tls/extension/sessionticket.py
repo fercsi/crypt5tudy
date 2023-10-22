@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 # RFC5077 - note that the recommended ticket format is not implemented (see 4.)
 
-from tls.util import *
+from util.serialize import *
 from .extension import Extension
 
 class SessionTicket(Extension):

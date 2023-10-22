@@ -1,6 +1,6 @@
 #!/usr/bin/python3
-# 17 03 03 ll ll <hs1> <hs2> 16 auth_tah
 
+from util.serialize import *
 from .message import Message, UnknownMessage
 from .handshake import Handshake, UnknownHandshake
 from .supported_handshakes import *
@@ -8,7 +8,6 @@ from .supported_handshakes import _HANDSHAKE_HANDLERS
 from .changecipherspec import ChangeCipherSpec
 from .alert import Alert
 from .applicationdata import ApplicationData
-from .util import *
 from .types import ContentType
 
 _MESSAGE_HANDLERS = {
@@ -18,7 +17,7 @@ _MESSAGE_HANDLERS = {
     ContentType.application_data: ApplicationData,
     }
 
-def unpack_message(content_type: int, raw: bytes, pos: int = 0, length: int|None = None, *, debug_level: int = 0) -> Message:
+def unpack_message(content_type: int, raw: bytes, pos: int = 0, length: int|None = None, *, verbosity: int = 0) -> Message:
     if length is None:
         if content_type == ContentType.handshake:
             length = 4 + unpack_u24(raw, pos+1)
@@ -41,6 +40,6 @@ def unpack_message(content_type: int, raw: bytes, pos: int = 0, length: int|None
             message = UnknownHandshake(handshake_type)
         else:
             message = handshake_handler()
-    message.debug_level = debug_level
+    message.verbosity = verbosity
     message.unpack(raw_content)
     return message

@@ -74,6 +74,7 @@ class sha256(HashFunction):
 
 
 class sha224(sha256):
+    # RFC 3874
     digest_size = 28
 
 

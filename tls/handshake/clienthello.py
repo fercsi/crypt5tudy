@@ -1,7 +1,8 @@
 #!/usr/bin/python3
 # RFC8446
 
-from tls.util import *
+from util.serialize import *
+from util.random import random_bytes
 from .handshake import Handshake
 
 CS_IDS = {

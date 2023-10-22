@@ -11,7 +11,7 @@ from .ecdh import ECDH
 from .ffdh import FFDH
 from .groupinfo import *
 from .keyexchange import KeyExchange
-from .util import debug
+from util.verbose import *
 
 class Client(Connect):
     """
@@ -23,14 +23,14 @@ class Client(Connect):
             hostname: str, port: int = 443, timeout: float = 30.0,
             key_share_group: str = 'x25519',
             mode: str = 't',
-            debug_level: int = 0,
+            verbosity: int = 0,
         ):
-        debug(1, debug_level, f"Initialize TLS connection...")
+        verbose(1, verbosity, f"Initialize TLS connection...")
         super().__init__(hostname=hostname, port=port, timeout=timeout,
-                                                     debug_level=debug_level)
+                                                     verbosity=verbosity)
         self.set_group_info(key_share_group)
         self.text_mode = mode == 't'
-        debug(2, debug_level, f"Set mode to {'text' if mode == 't' else 'binary'}")
+        verbose(2, verbosity, f"Set mode to {'text' if mode == 't' else 'binary'}")
         self.session_tickets = []
 
     def set_group_info(self, group_info: int|str|tuple):
@@ -40,7 +40,7 @@ class Client(Connect):
             self.group_info = GROUP_INFO_BY_ID[group_info]
         elif isinstance(group_info, (WeierstrassGroup, MontgomeryGroup, FFDHGroup)):
             self.group_info = group_info
-        debug(2, self.debug_level, f"Key Share Group parameters: {self.group_info}")
+        verbose(2, self.verbosity, f"Key Share Group parameters: {self.group_info}")
 
         if isinstance(self.group_info, FFDHGroup): # Finite field
             self.key_manager = FFDH(self.group_info)
@@ -48,13 +48,13 @@ class Client(Connect):
             self.key_manager = ECDH(self.group_info)
 
     def connect(self):
-        debug(1, self.debug_level, "Send client_hello...")
+        verbose(1, self.verbosity, "Send client_hello...")
         self.send_client_hello()
-        debug(1, self.debug_level, "Process server response...")
+        verbose(1, self.verbosity, "Process server response...")
         self.process_server_response()
-        debug(1, self.debug_level, "Client finishes handshake...")
+        verbose(1, self.verbosity, "Client finishes handshake...")
         self.finish_client_handshake()
-        debug(1, self.debug_level, "Handshake finished")
+        verbose(1, self.verbosity, "Handshake finished")
 
     def send_client_hello(self) -> None:
         self.socket = socket.create_connection((self.hostname, self.port), self.timeout)
@@ -66,7 +66,7 @@ class Client(Connect):
         goon = True
         while goon:
             message = self.receive_message()
-            message.debug_level = self.debug_level
+            message.verbosity = self.verbosity
             if isinstance(message, tls.Alert): # Fatal alerts killed the app by now
                 print(f"Server reported warning: {message.error_str()}")
             elif isinstance(message, tls.Handshake):
@@ -150,7 +150,7 @@ class Client(Connect):
         else:
             raise NotImplementedError(f'Unknown handshake message received {message.handshake_type}')
         self.handshakes.append(message_content)
-        debug(1, self.debug_level, f"Handshake message {type(message).__name__} received")
+        verbose(1, self.verbosity, f"Handshake message {type(message).__name__} received")
 
     def mk_client_hello(self):
         ch = tls.ClientHello([

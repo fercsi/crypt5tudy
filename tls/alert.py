@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 # RFC8446 (RFC5246) No affect in TLS1.3
 
-from tls.util import *
+from util.serialize import *
 from tls.message import Message
 
 LEVEL_IDS: dict[str, int] = {

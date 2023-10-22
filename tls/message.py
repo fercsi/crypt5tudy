@@ -4,7 +4,7 @@
 import struct
 #>from enum import IntEnum
 
-from .util import *
+from util.serialize import *
 
 #>class ContentType(IntEnum):
 #>    invalid = 0
@@ -15,10 +15,10 @@ from .util import *
 #>    _MAX = 255
 #>
 class Message:
-    def __init__(self, *, debug_level:int = 0):
+    def __init__(self, *, verbosity:int = 0):
         self.message_type = 0
         self.message_tlsversion = 0x0303
-        self.debug_level = debug_level
+        self.verbosity = verbosity
 
     def pack(self) -> bytes:
         type = bytes([self.message_type])

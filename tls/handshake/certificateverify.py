@@ -3,7 +3,7 @@
 
 from .handshake import Handshake
 from ..extension.signaturealgorithms import ALGORITHM_IDS
-from ..util import *
+from util.serialize import *
 
 class CertificateVerify(Handshake):
     def __init__(self, algorithm: int|str = 0):

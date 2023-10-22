@@ -2,7 +2,7 @@
 # RFC8446
 
 from enum import IntEnum
-from .util import *
+from util.serialize import *
 
 class TLSEnum8(IntEnum):
     def to_bytes(self):

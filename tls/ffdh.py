@@ -2,7 +2,7 @@
 
 import secrets
 from crypto.modular import Modular
-from .util import *
+from util.serialize import *
 from .groupinfo import FFDHGroup
 
 class FFDH:

@@ -2,7 +2,7 @@
 
 from .extension import Extension, UnknownExtension
 from ..supported_extensions import _EXTENSION_HANDLERS
-from ..util import *
+from util.serialize import *
 
 def pack_extension_list(extensions: list[Extension], size: int, **kwargs) -> bytes:
     exts = (ext.pack(**kwargs) for ext in extensions)

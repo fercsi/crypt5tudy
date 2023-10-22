@@ -8,7 +8,7 @@ import os.path
 #>print(os.path.dirname(__file__))
 sys.path.append(os.path.dirname(__file__) + '/..')
 
-from tls.util import *
+from util.serialize import *
 
 class Extension:
     def __init__(self):

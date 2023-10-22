@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 # RFC8446
 
-from tls.util import *
+from util.serialize import *
 from .extension import Extension
 
 KEXMODE_IDS: dict[str, int] = {
