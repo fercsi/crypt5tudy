@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 import pytest
-from crypto import AES
+from crypto.cipher.aes import aes as AES
 from crypto import GCM
 
 # David A. McGrew, John Viega: The Galois/Counter Mode of Operation (GCM)
