@@ -17,9 +17,9 @@ class aes(BlockCipher):
         self._w = _key_expansion(key)
 
     def encrypt(self, plainText: bytes) -> bytes:
+        Nr = self._Nr
         state = _raw_to_state(plainText)
         _add_round_key(state, self._w[0:4])
-        Nr = self._Nr
         for round in range(1, Nr):
             _sub_bytes(state)
             _shift_rows(state)
@@ -30,8 +30,19 @@ class aes(BlockCipher):
         _add_round_key(state, self._w[4*Nr:4*Nr+4])
         return _state_to_raw(state)
 
-#>    def decrypt(self, cipherText: bytes) -> bytes:
-#>        return b''
+    def decrypt(self, cipherText: bytes) -> bytes:
+        Nr = self._Nr
+        state = _raw_to_state(cipherText)
+        _add_round_key(state, self._w[4*Nr:4*Nr+4])
+        for round in range(Nr-1, 0, -1):
+            _inv_shift_rows(state)
+            _inv_sub_bytes(state)
+            _add_round_key(state, self._w[4*round:4*round+4])
+            _inv_mix_columns(state)
+        _inv_shift_rows(state)
+        _inv_sub_bytes(state)
+        _add_round_key(state, self._w[0:4])
+        return _state_to_raw(state)
 
 
 _GF256 = Polynomial([8, 4, 3, 1, 0])
@@ -76,10 +87,20 @@ def _sub_bytes(state: State) -> None:
         for r in range(4):
             state[c][r] = _SBOX[state[c][r]]
 
+def _inv_sub_bytes(state: State) -> None:
+    for c in range(4):
+        for r in range(4):
+            state[c][r] = _INVSBOX[state[c][r]]
+
 def _shift_rows(s: State) -> None:
     s[0][1], s[1][1], s[2][1], s[3][1] = s[1][1], s[2][1], s[3][1], s[0][1]
     s[0][2], s[1][2], s[2][2], s[3][2] = s[2][2], s[3][2], s[0][2], s[1][2]
     s[0][3], s[1][3], s[2][3], s[3][3] = s[3][3], s[0][3], s[1][3], s[2][3]
+
+def _inv_shift_rows(s: State) -> None:
+    s[0][1], s[1][1], s[2][1], s[3][1] = s[3][1], s[0][1], s[1][1], s[2][1]
+    s[0][2], s[1][2], s[2][2], s[3][2] = s[2][2], s[3][2], s[0][2], s[1][2]
+    s[0][3], s[1][3], s[2][3], s[3][3] = s[1][3], s[2][3], s[3][3], s[0][3]
 
 def _mix_columns(state: State) -> None:
     for v in state:
@@ -98,6 +119,14 @@ def _mix_columns(state: State) -> None:
     #    vo = 2 * vi ^ vi
     # e.g. v0_next = mulby2(v0 ^ v1) ^ v1 ^ v2 ^ v3
 
+def _inv_mix_columns(state: State) -> None:
+    for v in state:
+        v0, v1, v2, v3 = (_GF256(s) for s in v)
+        v[0] = int(0xe * v0 + 0xb * v1 + 0xd * v2 + 0x9 * v3)
+        v[1] = int(0x9 * v0 + 0xe * v1 + 0xb * v2 + 0xd * v3)
+        v[2] = int(0xd * v0 + 0x9 * v1 + 0xe * v2 + 0xb * v3)
+        v[3] = int(0xb * v0 + 0xd * v1 + 0x9 * v2 + 0xe * v3)
+
 def _add_round_key(state: State, w: list[Word]) -> None:
     for i in range(4):
         state[i] = [a^b for a,b in zip(state[i], w[i])]
@@ -113,9 +142,6 @@ def _show_state(state: State) -> None:
             print(f'{state[c][r]:0>2x} ', end='')
         print('|')
     print(' -------------')
-#>    for c in state:
-#>        print(''.join(f'{n:0>2x}' for n in c), end=' ')
-#>    print('')
 
 
 ##############################################################################
@@ -138,14 +164,35 @@ _SBOX = bytes.fromhex('''
     e1 f8 98 11 69 d9 8e 94 9b 1e 87 e9 ce 55 28 df
     8c a1 89 0d bf e6 42 68 41 99 2d 0f b0 54 bb 16
     ''')
+
+_INVSBOX = bytes.fromhex('''
+    52 09 6a d5 30 36 a5 38 bf 40 a3 9e 81 f3 d7 fb 
+    7c e3 39 82 9b 2f ff 87 34 8e 43 44 c4 de e9 cb 
+    54 7b 94 32 a6 c2 23 3d ee 4c 95 0b 42 fa c3 4e 
+    08 2e a1 66 28 d9 24 b2 76 5b a2 49 6d 8b d1 25 
+    72 f8 f6 64 86 68 98 16 d4 a4 5c cc 5d 65 b6 92 
+    6c 70 48 50 fd ed b9 da 5e 15 46 57 a7 8d 9d 84 
+    90 d8 ab 00 8c bc d3 0a f7 e4 58 05 b8 b3 45 06 
+    d0 2c 1e 8f ca 3f 0f 02 c1 af bd 03 01 13 8a 6b 
+    3a 91 11 41 4f 67 dc ea 97 f2 cf ce f0 b4 e6 73 
+    96 ac 74 22 e7 ad 35 85 e2 f9 37 e8 1c 75 df 6e 
+    47 f1 1a 71 1d 29 c5 89 6f b7 62 0e aa 18 be 1b 
+    fc 56 3e 4b c6 d2 79 20 9a db c0 fe 78 cd 5a f4 
+    1f dd a8 33 88 07 c7 31 b1 12 10 59 27 80 ec 5f 
+    60 51 7f a9 19 b5 4a 0d 2d e5 7a 9f 93 c9 9c ef 
+    a0 e0 3b 4d ae 2a f5 b0 c8 eb bb 3c 83 53 99 61 
+    17 2b 04 7e ba 77 d6 26 e1 69 14 63 55 21 0c 7d
+    ''')
+
 # Generating SBOX substitution table:
 #
 #     _SBOX = None
 #
 #     def _gen_SBOX() -> None:
-#         global _SBOX
+#         global _SBOX, _INVSBOX
 #         mask = 0xf8
 #         _SBOX = [0] * 256
+#         _INVSBOX = [0] * 256
 #         for b in range(256):
 #             b_inv = int(1 / _GF256(b)) if b else 0
 #             b_out = 0
@@ -153,7 +200,9 @@ _SBOX = bytes.fromhex('''
 #                 bit = _parity(b_inv & mask)
 #                 b_out = b_out << 1 | bit
 #                 mask = _rotr8(mask)
-#             _SBOX[b] = b_out ^ 0x63
+#             s = b_out ^ 0x63
+#             _SBOX[b] = s
+#             _INVSBOX[s] = b
 #     
 #     def _parity(value: int) -> int:
 #         p = 0
@@ -168,4 +217,3 @@ _SBOX = bytes.fromhex('''
 #     _gen_SBOX()
 
 Registry.add(aes)
-
