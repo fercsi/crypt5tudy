@@ -4,6 +4,7 @@ from .extension.ecpointformats import EcPointFormats
 from .extension.encryptthenmac import EncryptThenMAC
 from .extension.extendedmastersecret import ExtendedMasterSecret
 from .extension.keyshare import KeyShare
+from .extension.padding import Padding
 from .extension.pskkeyexchangemodes import PskKeyExchangeModes
 from .extension.servername import ServerName
 from .extension.sessionticket import SessionTicket
@@ -26,7 +27,7 @@ _EXTENSION_HANDLERS = {
 #>    18: SignedCertificateTimestamp, # RFC 6962
 #>    19: ClientCertificateType, # RFC 7250
 #>    20: ServerCertificateType, # RFC 7250
-#>    21: Padding, # RFC 7685
+    21: Padding, # RFC 7685
     22: EncryptThenMAC, #???
     23: ExtendedMasterSecret, #???
     35: SessionTicket, #???
