@@ -88,43 +88,117 @@ class Ans1BitString(Ans1Object):
     _type_id = 3
     _type_name = 'BIT STRING'
 
-    bits: bytes = b''
+    bits: bytearray
+    length: int = 0
     display_mode: str = 'hex' # 'bin', 'block'
+    encapsulated: list[Ans1Object]|None = None
 
-    def __init__(self, bits: bytes = b''):
-        self.bits = bits
+    def __init__(self):
+        self.bits = bytearray()
 
     def __bytes__(self):
         return self.bits
+
+    def __getitem__(self, index: int|range):
+        if isinstance(index, int):
+            if index < -self.length:
+                raise IndexError('index out of range')
+            if index >= self.length:
+                return 0
+            if index < 0:
+                index = self.length - index
+            return 1 if self.bits[index >> 3] & (1 << (~index & 7)) else 0
+        if isinstance(index, slice):
+            start = index.start
+            stop = index.stop
+            step = index.step or 1
+            if start is None:
+                if step < 0:
+                    start = self.length - 1
+                else:
+                    start = 0
+            elif start < 0:
+                start += self.length
+            if stop is None:
+                if step < 0:
+                    stop = -1
+                else:
+                    stop = self.length
+            elif stop < 0:
+                stop += self.length
+            value = 0
+            for i in range(start, stop, step):
+                value <<= 1
+                value |= self.__getitem__(i)
+            return value
+        raise TypeError('Ans1BitString indices must be integers or slices')
+
+    def __setitem__(self, index: int|range, value: int):
+        if isinstance(index, int):
+            if index < -self.length:
+                raise IndexError('index out of range')
+            if index >= self.length:
+                self.set_length(index + 1)
+            if index < 0:
+                index = self.length - index
+            mask = 1 << (~index & 7)
+            if value:
+                self.bits[index >> 3] |= mask
+            else:
+                self.bits[index >> 3] &= ~mask
+            return
+        if isinstance(index, slice):
+            NotImplemented # TODO 
+        raise TypeError('Ans1BitString indices must be integers or slices')
+
+    def set_length(self, length) -> None:
+        if length < self.length:
+            bitlen = length + 7 >> 3
+            self.bits = self.bits[:bitlen]
+            self.bits[-1] &= ~((1 << (-length & 7)) - 1)
+        elif length > self.length:
+            add = (length + 7 >> 3) - len(self.bits)
+            self.bits += b'\0' * add
+        self.length = length
 
     def annotate(self, name: str|None, display_mode: str|None = None):
         self.name = name
         self.display_mode = display_mode or 'hex'
 
+    def encapsulate(self, ans1_object: Ans1Object):
+        self._type_name = 'BIT STRING (encapsulated)'
+        if self.encapsulated is None:
+            self.encapsulated = []
+        self.encapsulated.apoend(ans1_object)
+
+    def process_encapsulated(self):
+        self._type_name = 'BIT STRING (encapsulated)'
+        self.encapsulated = []
+        pos = 0
+        endpos = len(self.bits)
+        while pos < endpos:
+            obj, pos = Ans1._from_ber(self.bits, pos)
+            self.encapsulated.append(obj)
+
     def to_ber(self):
-        return pack_u8(self._not_used()) + self.bits
+        if self.encapsulated is not None:
+            return b'\0' + b''.join(o.to_ber() for o in self.encapsulated)
+        return pack_u8() + self.bits
 
     def from_ber(self, raw: bytes):
-        # TODO: Understand, what the hack is the not-used byte there
-        self.bits = raw[1:]
-
-    def _not_used(self) -> int:
-        not_used = 0
-        last = self.bits[-1]
-        if last:
-            while last & 1 == 0:
-                not_used += 1
-                last >>= 1
-        return not_used
+        self.bits = bytearray(raw[1:])
+        self.length = len(raw) * 8 - 8 - raw[0]
 
     def _repr_content(self, level: int):
+        if self.encapsulated is not None:
+            return '\n' + ''.join(o._represent(level + 1) for o in self.encapsulated)[:-1]
         if self.display_mode == 'bin':
             text = '\n'
             bits = self.bits
             for i in range(0, len(bits), 4):
                 text += '  ' * level + '  ' + ' '.join(f'{b:0>8b}' for b in bits[i:i+4]) + '\n'
             text = text[:-1]
-            not_used = self._not_used()
+            not_used = -self.length & 7
             if not_used:
                 text = text[:-not_used] + '-' * not_used
             return text
@@ -235,7 +309,7 @@ class Ans1Sequence(Ans1Object):
         pos = 0
         self.content = []
         while pos < len(raw):
-            ans1_object, pos = Ans1._deserialize(raw, pos)
+            ans1_object, pos = Ans1._from_ber(raw, pos)
             self.append(ans1_object)
 
     def _repr_content(self, level: int):
@@ -282,10 +356,10 @@ class Ans1:
 
     @staticmethod
     def from_ber(raw: bytes):
-        return Ans1._deserialize(raw, 0)[0]
+        return Ans1._from_ber(raw, 0)[0]
 
     @staticmethod
-    def _deserialize(raw: bytes, pos: int = 0):
+    def _from_ber(raw: bytes, pos: int = 0):
         ans1_type = raw[pos]
         pos += 1
         constructed = (ans1_type & 0x20) != 0
