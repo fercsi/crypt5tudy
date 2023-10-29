@@ -4,8 +4,13 @@ import struct
 
 # Pack constructs
 
-def pack_int(content: int, size: int) -> bytes:
-    return content.to_bytes(size, 'big')
+def pack_int(content: int, size: int|None = None) -> bytes:
+    if size is not None:
+        return content.to_bytes(size, 'big')
+    h = hex(content)[2:]
+    if len(h) & 1:
+        h = '0' + h
+    return bytes.fromhex(h)
 
 def pack_u8(content: int) -> bytes:
     return bytes([content])
