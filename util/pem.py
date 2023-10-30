@@ -22,13 +22,12 @@ class Pem:
                 b64 += line.strip()
         if state != 'found':
             raise ValueError('PEM format error')
-        print(f'[{pem_type}]')
-        return base64.b64decode(b64)
+        return pem_type, base64.b64decode(b64)
 
-#>    @staticmethod
-#>    def parse(text: str) -> bytes:
-    
-
-OBJECT_IDENTIFIERS = {
-    '1.2.840.113549.1.1.1': 'X509 RSA',
-}
+    @staticmethod
+    def create(pem_type: str, content: bytes) -> str:
+        b64 = base64.b64encode(content).decode()
+        text = f'-----BEGIN {pem_type}-----\n'
+        text += '\n'.join(b64[i:i+64] for i in range(0, len(b64), 64)) + '\n'
+        text += f'-----END {pem_type}-----\n'
+        return text
