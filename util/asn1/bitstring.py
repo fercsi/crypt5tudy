@@ -82,7 +82,7 @@ class Asn1BitString(Asn1Object):
             self.bits += b'\0' * add
         self.length = length
 
-    def annotate(self, name: str|None, attributes):
+    def annotate(self, name: str|None, attributes = None):
         """Annotates either bits or an encapsulated object
 
         attributes types:
@@ -98,14 +98,14 @@ class Asn1BitString(Asn1Object):
                     item.annotate(*ann)
 
     def encapsulate(self, asn1_object: Asn1Object):
-        self._type_name = 'BIT STRING (content)'
+        self._type_name = 'BIT STRING (encapsulated)'
         if self.content is None:
             self.content = []
         self.content.apoend(asn1_object)
 
     def process_encapsulated(self):
         from .asn1 import Asn1
-        self._type_name = 'BIT STRING (content)'
+        self._type_name = 'BIT STRING (encapsulated)'
         self.content = []
         pos = 0
         endpos = len(self.bits)
@@ -116,7 +116,7 @@ class Asn1BitString(Asn1Object):
     def to_ber(self):
         if self.content is not None:
             return b'\0' + b''.join(o.to_ber() for o in self.content)
-        return pack_u8() + self.bits
+        return pack_u8(-self.length & 7) + self.bits
 
     def from_ber(self, raw: bytes):
         self.bits = bytearray(raw[1:])

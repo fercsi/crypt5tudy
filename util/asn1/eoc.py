@@ -3,6 +3,6 @@
 
 from .object import Asn1Object
 
-class Asn1Null(Asn1Object):
-    _type_id = 5
-    _type_name = 'NULL'
+class Asn1Eoc(Asn1Object):
+    _type_id = 0
+    _type_name = 'EOC'

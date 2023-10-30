@@ -5,12 +5,16 @@ from util.serialize import *
 from .objects import *
 
 _TYPE_HANDLERS = {
+     0: Asn1Eoc,
      1: Asn1Boolean,
      2: Asn1Integer,
      3: Asn1BitString,
      5: Asn1Null,
      6: Asn1ObjectIdentifier,
+    12: Asn1Utf8String,
     16: Asn1Sequence,
+    17: Asn1Set,
+    19: Asn1PrintableString,
 }
 
 class Asn1:
@@ -53,7 +57,8 @@ class Asn1:
 
     @staticmethod
     def _process_type(asn1_type: int, constructed: bool, type_class: int, data: bytes):
-        if type_class > 0:
+        # TODO: understand Context-specific behaviour. e.g. EOC
+        if type_class > 0 and asn1_type != 0:
             type_handler = Asn1NotImplemented
         else:
             type_handler = _TYPE_HANDLERS.get(asn1_type, Asn1NotImplemented)

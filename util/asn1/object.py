@@ -8,12 +8,20 @@ class Asn1Object:
     def annotate(self, name: str):
         self.name = name
 
+    def to_ber(self):
+        return b''
+
+    def from_ber(self, raw: bytes):
+        pass
+
     def __str__(self):
         return self._represent(0)[:-1]
 
     def _represent(self, level: int):
-        name = self.name or f'[{self._type_name}]'
-        return '  ' * level + name + ': ' + self._repr_content(level) + '\n'
+#>        name = self.name or f'[{self._type_name}]'
+#>        return '  ' * level + name + ': ' + self._repr_content(level) + '\n'
+        name = (self.name or '') +  f'[{self._type_name}]'
+        return '  ' * level + ('*' if self._constructed else '') + name + ': ' + self._repr_content(level) + '\n'
 
     def _repr_content(self, level: int):
         return '~'

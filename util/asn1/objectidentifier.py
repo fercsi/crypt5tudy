@@ -2,6 +2,7 @@
 # ASN.1 BER/DER, ITU-T X.690
 
 from util.serialize import *
+from util.objectidref import OBJECT_ID_REFERENCE
 from .object import Asn1Object
 
 class Asn1ObjectIdentifier(Asn1Object):
@@ -55,4 +56,8 @@ class Asn1ObjectIdentifier(Asn1Object):
             self.arcs.append(arc)
 
     def _repr_content(self, level: int):
-        return '.'.join(str(a) for a in self.arcs)
+        objid = '.'.join(str(a) for a in self.arcs)
+        name = OBJECT_ID_REFERENCE.get(objid, None)
+        if name is not None:
+            objid += f' ({name})'
+        return objid
