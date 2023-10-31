@@ -3,8 +3,10 @@
 
 from util.serialize import *
 from .object import Asn1Object
+from .constructable import Constructable
+from .encapsulatable import Encapsulatable
 
-class Asn1BitString(Asn1Object):
+class Asn1BitString(Constructable, Encapsulatable, Asn1Object):
     # TODO: constructed
     _type_id = 3
     _type_name = 'BIT STRING'
@@ -90,32 +92,17 @@ class Asn1BitString(Asn1Object):
         - display_mode (if not)
         """
         self.name = name
-        if self.content is None:
-            self.display_mode = attributes or 'hex'
-        else:
-            if attributes is not None:
-                for item, ann in zip(self.content, attributes):
-                    item.annotate(*ann)
-
-    def encapsulate(self, asn1_object: Asn1Object):
-        self._type_name = 'BIT STRING (encapsulated)'
-        if self.content is None:
-            self.content = []
-        self.content.apoend(asn1_object)
+        if self.content is not None:
+            return super().annotate(name, attributes)
+        self.name = name
+        self.display_mode = attributes or 'hex'
 
     def process_encapsulated(self):
-        from .asn1 import Asn1
-        self._type_name = 'BIT STRING (encapsulated)'
-        self.content = []
-        pos = 0
-        endpos = len(self.bits)
-        while pos < endpos:
-            obj, pos = Asn1._from_ber(self.bits, pos)
-            self.content.append(obj)
+        super().process_encapsulated(self.bits)
 
     def to_ber(self):
         if self.content is not None:
-            return b'\0' + b''.join(o.to_ber() for o in self.content)
+            return super().to_ber()
         return pack_u8(-self.length & 7) + self.bits
 
     def from_ber(self, raw: bytes):
@@ -124,7 +111,7 @@ class Asn1BitString(Asn1Object):
 
     def _repr_content(self, level: int):
         if self.content is not None:
-            return '\n' + ''.join(o._represent(level + 1) for o in self.content)[:-1]
+            return super()._repr_content(level)
         if self.display_mode == 'bin':
             text = '\n'
             bits = self.bits

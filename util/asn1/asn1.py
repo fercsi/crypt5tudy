@@ -9,12 +9,15 @@ _TYPE_HANDLERS = {
      1: Asn1Boolean,
      2: Asn1Integer,
      3: Asn1BitString,
+     4: Asn1OctetString,
      5: Asn1Null,
      6: Asn1ObjectIdentifier,
+     8: Asn1External,
     12: Asn1Utf8String,
     16: Asn1Sequence,
     17: Asn1Set,
     19: Asn1PrintableString,
+    23: Asn1UtcTime,
 }
 
 class Asn1:
@@ -58,12 +61,15 @@ class Asn1:
     @staticmethod
     def _process_type(asn1_type: int, constructed: bool, type_class: int, data: bytes):
         # TODO: understand Context-specific behaviour. e.g. EOC
-        if type_class > 0 and asn1_type != 0:
+#>        if type_class & 1: # class 0, 2 fall through
+        if type_class != 0: # class 0, 2 fall through
             type_handler = Asn1NotImplemented
         else:
             type_handler = _TYPE_HANDLERS.get(asn1_type, Asn1NotImplemented)
         content = type_handler()
         content._type_id = asn1_type
         content._constructed = constructed
+        content._class = type_class
+        content._raw = data
         content.from_ber(data)
         return content

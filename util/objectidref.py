@@ -1,11 +1,18 @@
 #!/usr/bin/python3
 
 OBJECT_ID_REFERENCE = {
-    # iso(1) member-body(2) us(840
+    # iso(1) member-body(2) us(840)
     '1.2.840.113549': 'rsadsi',
     '1.2.840.113549.1': 'pkcs',
     '1.2.840.113549.1.1': 'pkcs-1',
     '1.2.840.113549.1.1.1': 'rsaEncryption',
+    '1.2.840.113549.1.1.4': 'md5WithRSAEncryption',
+    '1.2.840.113549.1.1.5': 'sha1-with-rsa-signature',
+    '1.2.840.113549.1.1.10': 'rsassa-pss',
+    '1.2.840.113549.1.1.11': 'sha256WithRSAEncryption',
+    '1.2.840.113549.1.1.12': 'sha384WithRSAEncryption',
+    '1.2.840.113549.1.1.13': 'sha512WithRSAEncryption',
+    '1.2.840.113549.1.1.14': 'sha224WithRSAEncryption',
 
     # iso(1) org(3) oiw(14) secsig(3)
     '1.3.14.3.2': 'algorithms',

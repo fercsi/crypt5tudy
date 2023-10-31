@@ -20,8 +20,10 @@ class Asn1Object:
     def _represent(self, level: int):
 #>        name = self.name or f'[{self._type_name}]'
 #>        return '  ' * level + name + ': ' + self._repr_content(level) + '\n'
-        name = (self.name or '') +  f'[{self._type_name}]'
-        return '  ' * level + ('*' if self._constructed else '') + name + ': ' + self._repr_content(level) + '\n'
+        name = (self.name or '') + f'[{self._type_name}]'
+        constructed = ('*' if self._constructed else '')
+        classstr = (f'{self._class}#' if self._class else '')
+        return '  ' * level + constructed + classstr + name + ': ' + self._repr_content(level) + '\n'
 
     def _repr_content(self, level: int):
         return '~'
