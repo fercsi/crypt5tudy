@@ -12,6 +12,7 @@ class Asn1ObjectIdentifier(Asn1Object):
     arcs: list[int]
 
     def __init__(self, arcs: list[int] = []):
+        super().__init__()
         self.arcs = arcs
 
     def to_ber(self):

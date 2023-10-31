@@ -10,6 +10,7 @@ class Asn1Boolean(Asn1Object):
     value: bool = False
 
     def __init__(self, value: bool = False):
+        super().__init__()
         self.value = True if value else False
 
     def __bool__(self):

@@ -7,6 +7,7 @@ class Asn1String(Asn1Object):
     value: str = ''
 
     def __init__(self, value: str = ''):
+        super().__init__()
         self.value = value
 
     def to_ber(self):

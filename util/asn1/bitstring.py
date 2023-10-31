@@ -3,20 +3,19 @@
 
 from util.serialize import *
 from .object import Asn1Object
-from .constructable import Constructable
-from .encapsulatable import Encapsulatable
 
-class Asn1BitString(Constructable, Encapsulatable, Asn1Object):
+class Asn1BitString(Asn1Object):
     # TODO: constructed
     _type_id = 3
     _type_name = 'BIT STRING'
 
     bits: bytearray
     length: int = 0
-    display_mode: str = 'hex' # 'bin', 'block'
+    display_mode: str = 'hex_block'
     content: list[Asn1Object]|None = None
 
     def __init__(self):
+        super().__init__()
         self.bits = bytearray()
 
     def __bytes__(self):
@@ -91,17 +90,14 @@ class Asn1BitString(Constructable, Encapsulatable, Asn1Object):
         - content (if content is encapsulated)
         - display_mode (if not)
         """
-        self.name = name
-        if self.content is not None:
-            return super().annotate(name, attributes)
-        self.name = name
-        self.display_mode = attributes or 'hex'
+        if not super().annotate(name, attributes):
+            self.display_mode = attributes or 'hex'
 
     def process_encapsulated(self):
         super().process_encapsulated(self.bits)
 
     def to_ber(self):
-        if self.content is not None:
+        if self._constructed or self._encapsulated:
             return super().to_ber()
         return pack_u8(-self.length & 7) + self.bits
 
@@ -110,23 +106,12 @@ class Asn1BitString(Constructable, Encapsulatable, Asn1Object):
         self.length = len(raw) * 8 - 8 - raw[0]
 
     def _repr_content(self, level: int):
-        if self.content is not None:
+        if self._constructed or self._encapsulated:
             return super()._repr_content(level)
-        if self.display_mode == 'bin':
-            text = '\n'
-            bits = self.bits
-            for i in range(0, len(bits), 4):
-                text += '  ' * level + '  ' + ' '.join(f'{b:0>8b}' for b in bits[i:i+4]) + '\n'
-            text = text[:-1]
+        text = self.format_data(self.display_mode, self.bits, level + 1)
+        if self.display_mode in ('bin', 'bin_block'):
             not_used = -self.length & 7
             if not_used:
                 text = text[:-not_used] + '-' * not_used
-            return text
-        elif self.display_mode == 'block':
-            text = '\n'
-            byte_form = self.to_ber()
-            for i in range(0, len(byte_form), 16):
-                text += '  ' * level + '  ' + ' '.join(f'{b:0>2x}' for b in byte_form[i:i+16]) + '\n'
-            return text[:-1]
-        else: # hex
-            return self.bits.hex()
+        return text
+        # in case of hex_block, "not used" info is not displayed

@@ -11,6 +11,7 @@ class Asn1UtcTime(Asn1Object):
     value: datetime
 
     def __init__(self, value: datetime|None = None):
+        super().__init__()
         if value is None:
             self.value = datetime.now()
         else:
