@@ -51,7 +51,7 @@ class Asn1Object:
             return content
         return b''
 
-    def from_ber(self, raw: bytes):
+    def from_ber(self, raw: bytes) -> bool:
         if self._constructed:
             from .asn1 import Asn1
             pos = 0
@@ -59,30 +59,23 @@ class Asn1Object:
             while pos < len(raw):
                 asn1_object, pos = Asn1._from_ber(raw, pos)
                 self.append(asn1_object)
+            return True
+        return False
 
     def __str__(self):
         return self._represent(0)[:-1]
 
     def _represent(self, level: int):
-        # *A#privateKey[NOT IMPLEMENTED]:
-        # *privateKey[APP:NOT IMPLEMENTED]:
-        # #privateKey[APP:NOT IMPLEMENTED]:
-#>        name = self.name or f'[{self._type_name}]'
-#>        return '  ' * level + name + ': ' + self._repr_content(level) + '\n'
-
-#>        name = (self.name or '') + f'[{self._type_name}]'
-#>        constructed = ('*' if self._constructed else '')
-#>        classstr = (f'{self._class}#' if self._class else '')
-#>        return '  ' * level + constructed + classstr + name + ': ' + self._repr_content(level) + '\n'
-
         constructed = ('*' if self._constructed else '')
         encapsulated = ('#' if self._encapsulated else '')
         contained = constructed + encapsulated
         class_str = ['','APP:','CTX:','PRI:'][self._class] # Universal, Application, Context specific, Private
         name = (self.name or '') + f'[{class_str}{self._type_name}]'
+        content = self._repr_content(level) or '~'
+        sep = ':' if content[0] == '\n' else ': '
 #>        print('|', name)
 #>        print('|', self._repr_content(level))
-        return '  ' * level + contained + name + ': ' + self._repr_content(level) + '\n'
+        return '  ' * level + contained + name + sep + content + '\n'
 
     def _repr_content(self, level: int):
         if self._constructed or self._encapsulated:
@@ -94,11 +87,11 @@ class Asn1Object:
 
     def format_data(self, format: str, data: bytes, level: int) -> str:
         if format == 'dec':
-            return int.from_bytes(data, 'big')
+            return str(int.from_bytes(data, 'big'))
         if format == 'hex':
             return data.hex()
         if format == 'bin':
-            return ''.join(f'b:0>8b' for b in data)
+            return ''.join(f'{b:0>8b}' for b in data)
         if format == 'hex_block':
             text = '\n'
             for i in range(0, len(data), 16):
@@ -109,6 +102,6 @@ class Asn1Object:
             text = '\n'
             for i in range(0, len(data), 4):
                 text += '  ' * level \
-                            + ' '.join(f'{b:0>8b}' for b in bits[i:i+4]) + '\n'
+                            + ' '.join(f'{b:0>8b}' for b in data[i:i+4]) + '\n'
             return text[:-1]
         raise ValueError(f"unknown data format '{format}'")

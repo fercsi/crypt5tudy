@@ -91,7 +91,7 @@ class Asn1BitString(Asn1Object):
         - display_mode (if not)
         """
         if not super().annotate(name, attributes):
-            self.display_mode = attributes or 'hex'
+            self.display_mode = attributes or 'hex_block'
 
     def process_encapsulated(self):
         super().process_encapsulated(self.bits)
@@ -102,8 +102,9 @@ class Asn1BitString(Asn1Object):
         return pack_u8(-self.length & 7) + self.bits
 
     def from_ber(self, raw: bytes):
-        self.bits = bytearray(raw[1:])
-        self.length = len(raw) * 8 - 8 - raw[0]
+        if not super().from_ber(raw):
+            self.bits = bytearray(raw[1:])
+            self.length = len(raw) * 8 - 8 - raw[0]
 
     def _repr_content(self, level: int):
         if self._constructed or self._encapsulated:

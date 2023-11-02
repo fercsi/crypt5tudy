@@ -14,8 +14,7 @@ OBJECT_ID_REFERENCE = {
     '1.2.840.113549.1.1.13': 'sha512WithRSAEncryption',
     '1.2.840.113549.1.1.14': 'sha224WithRSAEncryption',
 
-    # iso(1) org(3) oiw(14) secsig(3)
-    '1.3.14.3.2': 'algorithms',
+    # iso(1) org(3) oiw(14) secsig(3) algorithms(2)
     '1.3.14.3.2.12': 'dsa',
     '1.3.14.3.2.27': 'dsaWithSHA1',
 

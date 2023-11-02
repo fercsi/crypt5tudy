@@ -86,7 +86,7 @@ class Asn1OctetString(Asn1Object):
         - display_mode (if not)
         """
         if not super().annotate(name, attributes):
-            self.display_mode = attributes or 'block'
+            self.display_mode = attributes or 'hex_block'
 
     def to_ber(self):
         if self._constructed or self._encapsulated:
@@ -94,7 +94,8 @@ class Asn1OctetString(Asn1Object):
         return self.data
 
     def from_ber(self, raw: bytes):
-        self.data = bytearray(raw)
+        if not super().from_ber(raw):
+            self.data = bytearray(raw)
 
     def _repr_content(self, level: int):
         if self._constructed or self._encapsulated:
