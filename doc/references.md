@@ -14,7 +14,7 @@
 ## Encryption
 
 **NIST FIPS 197. Advanced Encryption Standard (AES)**  
-`https://nvlpubs.nist.gov/nistpubs/fips/nist.fips.197.pdf`
+`https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.197-upd1.pdf`
 
 ## GCM
 
@@ -81,3 +81,14 @@ https://doi.org/10.6028/NIST.FIPS.202
 
 **Modular Square Root**  
 `https://www.rieselprime.de/ziki/Modular_square_root`
+
+## ASN.1
+
+**ITU-T X.690**  
+`https://www.itu.int/rec/T-REC-X.690/`
+
+**ASN.1 Complete**  
+`http://www.oss.com/asn1/resources/books-whitepapers-pubs/larmouth-asn1-book.pdf`
+
+**Object Identifier Reference**  
+`https://oidref.com/`
