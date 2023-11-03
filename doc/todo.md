@@ -12,3 +12,9 @@ Further algorithms to implement:
 - CHACHA20/POLY1305
 
 error messages
+
+## ASN.1
+
+- Every types may be formatted in hex form
+- getitem/setitem in bit string and octet string
+- implement further types
