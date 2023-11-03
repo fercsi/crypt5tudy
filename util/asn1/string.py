@@ -4,25 +4,39 @@
 from .object import Asn1Object
 
 class Asn1String(Asn1Object):
-    value: str = ''
 
-    def __init__(self, value: str = ''):
+    def __init__(self, text: str = ''):
         super().__init__()
-        self.value = value
+        self.data = text.encode()
+
+    @property
+    def text(self):
+        return self.data.decode(self._default_format[4:], errors='replace')
+
+    @text.setter
+    def text(self, text: str):
+        self.data = text.encode()
 
     def to_ber(self):
-        return self.value.encode()
+        if self._constructed or self._encapsulated:
+            return super().to_ber()
+        return self.data
 
     def from_ber(self, raw: bytes):
-        self.value = raw.decode()
+        if not super().from_ber(raw):
+            self.data = raw
 
     def _repr_content(self, level: int):
-        return repr(self.value)
+        if self._constructed or self._encapsulated:
+            return super()._repr_content(level)
+        return self.format_data(self.data, level + 1)
 
 class Asn1Utf8String(Asn1String):
     _type_id = 12
     _type_name = 'UTF8 STRING'
+    _default_format = 'str_utf8'
 
 class Asn1PrintableString(Asn1String):
     _type_id = 19
     _type_name = 'PRINTABLE STRING'
+    _default_format = 'str_ascii'

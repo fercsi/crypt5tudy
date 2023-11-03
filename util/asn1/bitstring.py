@@ -5,21 +5,20 @@ from util.serialize import *
 from .object import Asn1Object
 
 class Asn1BitString(Asn1Object):
-    # TODO: constructed
     _type_id = 3
     _type_name = 'BIT STRING'
 
-    bits: bytearray
+    _default_format: str = 'hex_block'
+    data: bytearray
     length: int = 0
-    display_mode: str = 'hex_block'
     content: list[Asn1Object]|None = None
 
     def __init__(self):
         super().__init__()
-        self.bits = bytearray()
+        self.data = bytearray()
 
     def __bytes__(self):
-        return self.bits
+        return self.data
 
     def __getitem__(self, index: int|range):
         if isinstance(index, int):
@@ -29,7 +28,7 @@ class Asn1BitString(Asn1Object):
                 return 0
             if index < 0:
                 index = self.length - index
-            return 1 if self.bits[index >> 3] & (1 << (~index & 7)) else 0
+            return 1 if self.data[index >> 3] & (1 << (~index & 7)) else 0
         if isinstance(index, slice):
             start = index.start
             stop = index.stop
@@ -65,9 +64,9 @@ class Asn1BitString(Asn1Object):
                 index = self.length - index
             mask = 1 << (~index & 7)
             if value:
-                self.bits[index >> 3] |= mask
+                self.data[index >> 3] |= mask
             else:
-                self.bits[index >> 3] &= ~mask
+                self.data[index >> 3] &= ~mask
             return
         if isinstance(index, slice):
             NotImplemented # TODO 
@@ -76,41 +75,31 @@ class Asn1BitString(Asn1Object):
     def set_length(self, length) -> None:
         if length < self.length:
             bitlen = length + 7 >> 3
-            self.bits = self.bits[:bitlen]
-            self.bits[-1] &= ~((1 << (-length & 7)) - 1)
+            self.data = self.data[:bitlen]
+            self.data[-1] &= ~((1 << (-length & 7)) - 1)
         elif length > self.length:
-            add = (length + 7 >> 3) - len(self.bits)
-            self.bits += b'\0' * add
+            add = (length + 7 >> 3) - len(self.data)
+            self.data += b'\0' * add
         self.length = length
 
-    def annotate(self, name: str|None, attributes = None):
-        """Annotates either bits or an encapsulated object
-
-        attributes types:
-        - content (if content is encapsulated)
-        - display_mode (if not)
-        """
-        if not super().annotate(name, attributes):
-            self.display_mode = attributes or 'hex_block'
-
     def process_encapsulated(self):
-        super().process_encapsulated(self.bits)
+        super().process_encapsulated(self.data)
 
     def to_ber(self):
         if self._constructed or self._encapsulated:
             return super().to_ber()
-        return pack_u8(-self.length & 7) + self.bits
+        return pack_u8(-self.length & 7) + self.data
 
     def from_ber(self, raw: bytes):
         if not super().from_ber(raw):
-            self.bits = bytearray(raw[1:])
+            self.data = bytearray(raw[1:])
             self.length = len(raw) * 8 - 8 - raw[0]
 
     def _repr_content(self, level: int):
         if self._constructed or self._encapsulated:
             return super()._repr_content(level)
-        text = self.format_data(self.display_mode, self.bits, level + 1)
-        if self.display_mode in ('bin', 'bin_block'):
+        text = self.format_data(self.data, level + 1)
+        if self.format in ('bin', 'bin_block'):
             not_used = -self.length & 7
             if not_used:
                 text = text[:-not_used] + '-' * not_used

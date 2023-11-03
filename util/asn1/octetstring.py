@@ -5,13 +5,11 @@ from util.serialize import *
 from .object import Asn1Object
 
 class Asn1OctetString(Asn1Object):
-    # TODO: constructed
     _type_id = 4
     _type_name = 'OCTET STRING'
 
+    _default_format: str = 'hex_block'
     data: bytearray
-    display_mode: str = 'hex_block'
-    content: list[Asn1Object]|None = None
 
     def __init__(self):
         super().__init__()
@@ -78,16 +76,6 @@ class Asn1OctetString(Asn1Object):
 #>            self.bits += b'\0' * add
 #>        self.length = length
 
-    def annotate(self, name: str|None, attributes = None):
-        """Annotates either bits or an encapsulated object
-
-        attributes types:
-        - content (if content is encapsulated)
-        - display_mode (if not)
-        """
-        if not super().annotate(name, attributes):
-            self.display_mode = attributes or 'hex_block'
-
     def to_ber(self):
         if self._constructed or self._encapsulated:
             return super().to_ber()
@@ -96,8 +84,3 @@ class Asn1OctetString(Asn1Object):
     def from_ber(self, raw: bytes):
         if not super().from_ber(raw):
             self.data = bytearray(raw)
-
-    def _repr_content(self, level: int):
-        if self._constructed or self._encapsulated:
-            return super()._repr_content(level)
-        return self.format_data(self.display_mode, self.data, level + 1)

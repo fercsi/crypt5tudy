@@ -10,18 +10,23 @@ class Asn1Object:
     _raw: bytes
     name: str|None = None
     content: list[Self]
+    _default_format: str = 'hex_block'
+    format: str
+    data: bytes|None
 
     def __init__(self):
         self.content = []
+        self.format = self._default_format
+        self.data = None
 
-    def annotate(self, name: str|None, items: list[tuple]|None = None) -> bool:
+    def annotate(self, name: str|None, items: list[tuple]|None = None):
         self.name = name
         if (self._constructed or self._encapsulated) and items is not None:
             for item, annotation in zip(self.content, items):
                 if annotation:
                     item.annotate(*annotation)
-            return True
-        return False
+        else:
+            self.format = items or self._default_format
 
     def append(self, asn1_object: Self):
         self.content.append(asn1_object)
@@ -83,25 +88,32 @@ class Asn1Object:
             for asn1_object in self.content:
                 text += asn1_object._represent(level + 1)
             return text[:-1]
+        if self.data:
+            return self.format_data(self.data, level + 1)
         return '~'
 
-    def format_data(self, format: str, data: bytes, level: int) -> str:
-        if format == 'dec':
+    def format_data(self, data: bytes, level: int) -> str:
+        if self.format == 'dec':
             return str(int.from_bytes(data, 'big'))
-        if format == 'hex':
+        if self.format == 'hex':
             return data.hex()
-        if format == 'bin':
+        if self.format == 'bin':
             return ''.join(f'{b:0>8b}' for b in data)
-        if format == 'hex_block':
+        if self.format == 'hex_block':
             text = '\n'
             for i in range(0, len(data), 16):
                 text += '  ' * level \
                             + ' '.join(f'{b:0>2x}' for b in data[i:i+16]) + '\n'
             return text[:-1]
-        if self.display_mode == 'bin_block':
+        if self.format == 'bin_block':
             text = '\n'
             for i in range(0, len(data), 4):
                 text += '  ' * level \
                             + ' '.join(f'{b:0>8b}' for b in data[i:i+4]) + '\n'
             return text[:-1]
+        if self.format == 'str':
+            return repr(data.decode('utf8', errors='replace'))
+        if self.format[:4] == 'str_':
+            encoding = self.format[4:]
+            return repr(data.decode(encoding, errors='replace'))
         raise ValueError(f"unknown data format '{format}'")
