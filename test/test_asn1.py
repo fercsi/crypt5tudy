@@ -252,11 +252,13 @@ def test_deserialize(ber, annotation, printout):
     assert len(ber_raw) == length
 
 
+# ==== EOC, TYPE 0 ====
 def test_create_eoc():
     obj = Asn1Eoc()
     assert Asn1.to_ber(obj).hex() == '0000'
 
 
+# ==== BOOLEAN, TYPE 1 ====
 @pytest.mark.parametrize('value, result', (
     (False, '010100'),
     (True, '0101ff'),
@@ -267,8 +269,10 @@ def test_create_boolean(value, result):
     obj = Asn1Boolean()
     obj.value = value
     assert Asn1.to_ber(obj).hex() == result
+    assert bool(obj) == value
 
 
+# ==== INTEGER, TYPE 2 ====
 @pytest.mark.parametrize('value, result', (
     (0, '020100'),
     (182, '0201b6'),
@@ -282,4 +286,45 @@ def test_create_integer(value, result):
     assert Asn1.to_ber(obj).hex() == result
     obj = Asn1Integer()
     obj.value = value
+    assert Asn1.to_ber(obj).hex() == result
+    assert int(obj) == value
+
+
+# ==== BIT STRING, TYPE 3 ====
+# TODO: bytes(), constructed, length property
+@pytest.mark.parametrize('bits, result', (
+    ( tuple(), '030100' ),
+    ( (0,), '03020780' ),
+    ( (4,), '03020308' ),
+    ( (7,), '03020001' ),
+    ( (2,4,5), '0302022c' ),
+    ( (8,), '0303070080' ),
+    ( (3,7,11), '0303041110' ),
+))
+def test_create_bitstring(bits, result):
+    obj = Asn1BitString(bits)
+    assert Asn1.to_ber(obj).hex() == result
+    obj = Asn1BitString()
+    for i in bits:
+        obj[i] = 1
+    assert Asn1.to_ber(obj).hex() == result
+
+@pytest.mark.parametrize('bits, result', (
+    ( {(2,6,1): 0b1101}, '03020234' ),
+    ( {(5,13,1): 0b1100_1010}, '0303030650' ),
+    ( {(5,13,None): 0b1100_1010}, '0303030650' ),
+    ( {13:1, (5,13,None): 0b1100_1010}, '0303020654' ),
+    ( {13:1, (None,None,None): 0b1100_1010}, '0303020328' ),
+    ( {13:1, (5,None,None): 0b1100_1010}, '0303020328' ),
+    ( {13:1, (-9,None,None): 0b1100_1010}, '0303020328' ),
+    ( {13:1, (None,6,None): 0b1100_1010}, '0303022804' ),
+    ( {13:1, (None,-8,None): 0b1100_1010}, '0303022804' ),
+    ( {13:1, (None,None,2): 0b1100_1010}, '0303028224' ),
+    ( {13:1, (None,None,-1): 0b1100_1010}, '0303025300' ),
+    ( {13:1, (None,None,-2): 0b1100_1010}, '0303021104' ),
+))
+def test_create_bitstring_slice(bits, result):
+    obj = Asn1BitString()
+    for ndx, value in bits.items():
+        obj[ndx if isinstance(ndx, int) else slice(*ndx)] = value
     assert Asn1.to_ber(obj).hex() == result
