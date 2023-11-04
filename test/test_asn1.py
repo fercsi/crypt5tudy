@@ -291,7 +291,7 @@ def test_create_integer(value, result):
 
 
 # ==== BIT STRING, TYPE 3 ====
-# TODO: bytes(), constructed, length property
+# TODO: __getitem__, bytes(), length property
 @pytest.mark.parametrize('bits, result', (
     ( tuple(), '030100' ),
     ( (0,), '03020780' ),
@@ -328,3 +328,143 @@ def test_create_bitstring_slice(bits, result):
     for ndx, value in bits.items():
         obj[ndx if isinstance(ndx, int) else slice(*ndx)] = value
     assert Asn1.to_ber(obj).hex() == result
+
+def test_create_bitstring_constructed():
+    obj = Asn1BitString(constructed = True)
+    assert Asn1.to_ber(obj) == bytes.fromhex('23 00')
+    obj.append(Asn1BitString([3,8,14]))
+    obj.append(Asn1BitString())
+    assert Asn1.to_ber(obj) == bytes.fromhex('23 08'
+            + '03 03 01 1082'
+            + '03 01 00')
+
+
+# ==== OCTET STRING, TYPE 4 ====
+# TODO: data=, bytes, getitem, length property
+@pytest.mark.parametrize('octets, result', (
+    ( {}, '0400' ),
+    ( {0: 0xb6}, '0401b6' ),
+    ( {2: 0xb6}, '04030000b6' ),
+    ( {4: 0xb6, 2: b'\x89'}, '040500008900b6' ),
+    ( {(2,5,1): 0xb6}, '04050000b6b6b6' ),
+    ( {(2,5,1): b'\x42\x89\xb6'}, '040500004289b6' ),
+    ( {(2,5,1): 0xb6, (1,3,1): 0x2a}, '0405002a2ab6b6' ),
+    ( {8:0xb6, (5,None,None): b'ABCDEF'}, '040b0000000000414243444546' ),
+    ( {8:0xb6, (-4,None,None): b'ABCDEF'}, '040b0000000000414243444546' ),
+    ( {8:0xb6, (None,5,None): b'ABCDEF'}, '04094142434445000000b6' ),
+    ( {8:0xb6, (None,-4,None): b'ABCDEF'}, '04094142434445000000b6' ),
+    ( {8:0xb6, (None,None,2): b'ABCDEF'}, '040b4100420043004400450046' ),
+    ( {8:0xb6, (None,None,-1): b'ABCDEF'}, '0409000000464544434241' ),
+    ( {8:0xb6, (None,None,-2): b'ABCDEF'}, '0409450044004300420041' ),
+    ( {8:0xb6, (6,1,-2): b'ABCDEF'}, '04090000430042004100b6' ),
+))
+def test_create_octetstring_slice(octets, result):
+    obj = Asn1OctetString()
+    for ndx, value in octets.items():
+        obj[ndx if isinstance(ndx, int) else slice(*ndx)] = value
+    assert Asn1.to_ber(obj).hex() == result
+
+def test_create_octetstring_constructed():
+    obj = Asn1OctetString(constructed = True)
+    assert Asn1.to_ber(obj) == bytes.fromhex('24 00')
+    obj.append(Asn1OctetString(bytes([42])))
+    obj.append(Asn1OctetString())
+    assert Asn1.to_ber(obj) == bytes.fromhex('24 05'
+            + '04 01 2a'
+            + '04 00')
+
+
+# ==== NULL, TYPE 5 ====
+def test_create_null():
+    obj = Asn1Null()
+    assert Asn1.to_ber(obj).hex() == '0500'
+
+
+# ==== OBJECT IDENTIFIER, TYPE 6 ====
+@pytest.mark.parametrize('oid, result', (
+    ( [0,0], '06 01 00' ),
+    ( [1,0], '06 01 28' ),
+    ( [1,2], '06 01 2a' ),
+    ( [1,2,840], '06 03 2a 86 48' ),
+    ( (1,2,840,113549), '06 06 2a 86 48 86 f7 0d' ),
+    ( '1.2.840.113549.1.1.1', '06 09 2a 86 48 86 f7 0d 01 01 01' ),
+))
+def test_create_objectidentifier(oid, result):
+    result = bytes.fromhex(result)
+    obj = Asn1ObjectIdentifier(oid)
+    assert Asn1.to_ber(obj) == result
+    obj = Asn1ObjectIdentifier()
+    obj.arcs = oid
+    assert Asn1.to_ber(obj) == result
+
+
+# ==== EXTERNAL, TYPE 8 ====
+def test_create_external():
+    obj = Asn1External()
+    assert Asn1.to_ber(obj) == bytes.fromhex('28 00')
+    obj.append(Asn1Boolean(True))
+    obj.append(Asn1Integer(42))
+    obj.append(Asn1OctetString())
+    assert Asn1.to_ber(obj) == bytes.fromhex('28 08'
+            + '01 01 ff'
+            + '02 01 2a'
+            + '04 00')
+
+
+# ==== UTF8 STRING, TYPE 12 ====
+@pytest.mark.parametrize('text, result', (
+    ( '', '0c 00' ),
+    ( 'ABCD', '0c 04 41 42 43 44' ),
+    ( 'r²π', '0c 05 72 c2 b2 cf 80' ),
+    ( '☺', '0c 03 e2 98 ba' ),
+))
+def test_create_utf8string(text, result):
+    result = bytes.fromhex(result)
+    obj = Asn1Utf8String(text)
+    assert Asn1.to_ber(obj) == result
+    obj = Asn1Utf8String()
+    obj.text = text
+    assert Asn1.to_ber(obj) == result
+
+def test_create_utf8string_constructed():
+    obj = Asn1Utf8String(constructed = True)
+    assert Asn1.to_ber(obj) == bytes.fromhex('2c 00')
+    obj.append(Asn1Utf8String('ABCD'))
+    obj.append(Asn1Utf8String())
+    assert Asn1.to_ber(obj) == bytes.fromhex('2c 08'
+            + '0c 04 41 42 43 44'
+            + '0c 00')
+
+
+# ==== SEQUENCE, TYPE 16 ====
+def test_create_sequence():
+    obj = Asn1Sequence()
+    assert Asn1.to_ber(obj) == bytes.fromhex('30 00')
+    obj.append(Asn1Boolean(True))
+    obj.append(Asn1Integer(42))
+    obj.append(Asn1OctetString())
+    assert Asn1.to_ber(obj) == bytes.fromhex('30 08'
+            + '01 01 ff'
+            + '02 01 2a'
+            + '04 00')
+
+
+# ==== SET, TYPE 17 ====
+def test_create_set():
+    obj = Asn1Set()
+    assert Asn1.to_ber(obj) == bytes.fromhex('31 00')
+    seq = Asn1Sequence()
+    seq.append(Asn1Boolean(True))
+    seq.append(Asn1Integer(42))
+    obj.append(seq)
+    seq = Asn1Sequence()
+    seq.append(Asn1Boolean(False))
+    seq.append(Asn1Integer(258))
+    obj.append(seq)
+    assert Asn1.to_ber(obj) == bytes.fromhex('31 11'
+            + '30 06'
+                + '01 01 ff'
+                + '02 01 2a'
+            + '30 07'
+                + '01 01 00'
+                + '02 02 01 02')

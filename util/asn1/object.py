@@ -29,6 +29,7 @@ class Asn1Object:
             self.format = items or self._default_format
 
     def append(self, asn1_object: Self):
+        self._constructed = True
         self.content.append(asn1_object)
 
     def encapsulate(self, asn1_object: Self):

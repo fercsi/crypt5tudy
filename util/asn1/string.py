@@ -5,8 +5,9 @@ from .object import Asn1Object
 
 class Asn1String(Asn1Object):
 
-    def __init__(self, text: str = ''):
+    def __init__(self, text: str = '', *, constructed: bool = False):
         super().__init__()
+        self._constructed = constructed
         self.data = text.encode()
 
     @property
@@ -15,7 +16,8 @@ class Asn1String(Asn1Object):
 
     @text.setter
     def text(self, text: str):
-        self.data = text.encode()
+        # Intentionally raise error if encoding fails
+        self.data = text.encode(self._default_format[4:])
 
     def to_ber(self):
         if self._constructed or self._encapsulated:

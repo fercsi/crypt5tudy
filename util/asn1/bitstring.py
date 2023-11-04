@@ -13,8 +13,9 @@ class Asn1BitString(Asn1Object):
     data: bytearray
     content: list[Asn1Object]|None = None
 
-    def __init__(self, bits: list[int] = []):
+    def __init__(self, bits: list[int] = [], *, constructed: bool = False):
         super().__init__()
+        self._constructed = constructed
         self.data = bytearray()
         for i in bits:
             self.__setitem__(i, 1)
@@ -33,6 +34,9 @@ class Asn1BitString(Asn1Object):
             add = (length + 7 >> 3) - len(self.data)
             self.data += b'\0' * add
         self._length = length
+
+    def __len__(self):
+        return self._length
 
     def __bytes__(self):
         return self.data
