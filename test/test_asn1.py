@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 
+import datetime as dt
 import pytest
 from util.asn1 import *
 
@@ -236,7 +237,7 @@ from util.asn1 import *
           '  [PRINTABLE STRING]: 686578',
           '  [PRINTABLE STRING]: \'ASN.1\'' )   ),
     # ==== UTC TIME, TYPE 23 ====
-    (   '17 0c 3233 3131 3033 3230 3132 3239',
+    (   '17 0d 3233 3131 3033 3230 3132 3239 5a',
         None,
         '[UTC TIME]: 2023-11-03 20:12:29'   ),
 ))
@@ -468,3 +469,42 @@ def test_create_set():
             + '30 07'
                 + '01 01 00'
                 + '02 02 01 02')
+
+
+# ==== PRINTABLE STRING, TYPE 19 ====
+@pytest.mark.parametrize('text, result', (
+    ( '', '13 00' ),
+    ( 'ABCD', '13 04 41 42 43 44' ),
+    ( 'x'*1975, '13 82 07 b7' + '78'*1975 ),
+))
+def test_create_printablestring(text, result):
+    result = bytes.fromhex(result)
+    obj = Asn1PrintableString(text)
+    assert Asn1.to_ber(obj) == result
+    obj = Asn1PrintableString()
+    obj.text = text
+    assert Asn1.to_ber(obj) == result
+
+def test_create_printablestring_constructed():
+    obj = Asn1PrintableString(constructed = True)
+    assert Asn1.to_ber(obj) == bytes.fromhex('33 00')
+    obj.append(Asn1PrintableString('ABCD'))
+    obj.append(Asn1PrintableString())
+    assert Asn1.to_ber(obj) == bytes.fromhex('33 08'
+            + '13 04 41 42 43 44'
+            + '13 00')
+
+
+# ==== UTC TIME, TYPE 23 ====
+@pytest.mark.parametrize('time, result', (
+    ( dt.datetime(1999,5,10,18,25,39), b'\x17\x0d990510182539Z' ),
+    ( '1999-05-10 18:25:39', b'\x17\x0d990510182539Z' ),
+    ( [1999,5,10,18,25,39], b'\x17\x0d990510182539Z' ),
+    ( (1999,5,10,18,25,39), b'\x17\x0d990510182539Z' ),
+))
+def test_create_utf8string(time, result):
+    obj = Asn1UtcTime(time)
+    assert Asn1.to_ber(obj) == result
+    obj = Asn1UtcTime()
+    obj.time = time
+    assert Asn1.to_ber(obj) == result
