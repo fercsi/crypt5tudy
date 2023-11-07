@@ -29,7 +29,7 @@ class Asn1:
         if length < 0x80:
             raw_len = pack_u8(length)
         else:
-            raw_len = pack_int(length)
+            raw_len = pack_uint(length)
             raw_len = pack_u8(0x80 + len(raw_len)) + raw_len
         return pack_u8(asn1_type) + raw_len + content
 
@@ -51,7 +51,7 @@ class Asn1:
         pos += 1
         if length & 0x80:
             ll = length & 0x7f
-            length = unpack_int(raw, pos, ll)
+            length = unpack_uint(raw, pos, ll)
             pos += ll
         data = raw[pos:pos+length]
         pos += length

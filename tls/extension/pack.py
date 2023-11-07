@@ -9,7 +9,7 @@ def pack_extension_list(extensions: list[Extension], size: int, **kwargs) -> byt
     return pack_bytes_list(exts, size)
 
 def unpack_extension_list(raw: bytes, pos: int, handshake_type: int, size: int, **kwargs) -> list[Extension]:
-    endpos = pos + size + unpack_int(raw, pos, size)
+    endpos = pos + size + unpack_uint(raw, pos, size)
     pos += size
     extensions = []
     while pos < endpos:

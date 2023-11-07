@@ -20,14 +20,14 @@ class FFDH:
         if isinstance(priv, bytes):
             priv = int.from_bytes(priv, size)
         pub_m = g ** priv
-        pub = pack_int(int(pub_m), size)
+        pub = pack_uint(int(pub_m), size)
         return priv, pub
 
     def create_secret(self, my_priv: bytes|int, peer_pub) -> bytes:
         bits = self.group.bits
         size = bits + 7 >> 3
-        pub_m = self.M(unpack_int(peer_pub, 0, size))
+        pub_m = self.M(unpack_uint(peer_pub, 0, size))
         if isinstance(my_priv, bytes):
-            my_priv = unpack_int(my_priv, 0, size)
+            my_priv = unpack_uint(my_priv, 0, size)
         secret = pub_m ** my_priv
-        return pack_int(secret, size)
+        return pack_uint(secret, size)

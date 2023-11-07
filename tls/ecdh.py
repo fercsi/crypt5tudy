@@ -23,7 +23,7 @@ class ECDHWeierstrass:
             self.x = x
             self.y = y
         def __bytes__(self) -> bytes:
-            return b'\x04' + pack_int(self.x, self.size) + pack_int(self.y, self.size)
+            return b'\x04' + pack_uint(self.x, self.size) + pack_uint(self.y, self.size)
 
     def __init__(self, group: WeierstrassGroup):
         self.group = group
@@ -39,7 +39,7 @@ class ECDHWeierstrass:
             priv = int.from_bytes(priv, size)
         pub_ec = priv * G
 #>        pub = ECDHWeierstrass.PublicKey(size, pub_ec.x, pub_ec.y)
-        pub = b'\x04' + pack_int(pub_ec.x, size) + pack_int(pub_ec.y, size)
+        pub = b'\x04' + pack_uint(pub_ec.x, size) + pack_uint(pub_ec.y, size)
         return priv, pub
 
     def create_secret(self, my_priv: bytes|int, peer_pub) -> bytes:
@@ -47,13 +47,13 @@ class ECDHWeierstrass:
         size = bits + 7 >> 3
 #>        pub_ec = self.ec(peer_pub.x, peer_pub.y)
         pub_ec = self.ec(
-            unpack_int(peer_pub, 1, size),
-            unpack_int(peer_pub, size+1, size)
+            unpack_uint(peer_pub, 1, size),
+            unpack_uint(peer_pub, size+1, size)
         )
         if isinstance(my_priv, bytes):
             my_priv = int.from_bytes(my_priv, size)
         secret = my_priv * pub_ec
-        return pack_int(secret.x, size)
+        return pack_uint(secret.x, size)
 
 
 class ECDHMontgomery:

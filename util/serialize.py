@@ -4,13 +4,16 @@ import struct
 
 # Pack constructs
 
-def pack_int(content: int, size: int|None = None) -> bytes:
-    if size is not None:
-        return content.to_bytes(size, 'big')
-    h = hex(content)[2:]
-    if len(h) & 1:
-        h = '0' + h
-    return bytes.fromhex(h)
+def pack_uint(content: int, size: int|None = None) -> bytes:
+    if size is None:
+        size = content.bit_length() + 7 >> 3 or 1
+    return content.to_bytes(size, 'big')
+
+def pack_sint(content: int, size: int|None = None) -> bytes:
+    if size is None:
+        c = c if content >= 0 else content + 1
+        size = (c.bit_length() >> 3) + 1
+    return content.to_bytes(size, 'big', signed=True)
 
 def pack_u8(content: int) -> bytes:
     return bytes([content])
@@ -26,11 +29,11 @@ def pack_u32(content: int) -> bytes:
 
 def pack_str(content: str, size: int) -> bytes:
     data = content.encode()
-    return pack_int(len(data), size) + data
+    return pack_uint(len(data), size) + data
 
 def pack_bytes(content: bytes, size: int) -> bytes:
     data = content
-    return pack_int(len(data), size) + data
+    return pack_uint(len(data), size) + data
 
 def pack_u8_list(content: list[int], size: int) -> bytes:
     if content:
@@ -38,23 +41,32 @@ def pack_u8_list(content: list[int], size: int) -> bytes:
         data = bytes(content)
     else:
         data = b''
-    return pack_int(len(data), size) + data
+    return pack_uint(len(data), size) + data
 
 def pack_u16_list(content: list[int], size: int) -> bytes:
     if content:
         data = struct.pack(f'>{len(content)}H', *content)
     else:
         data = b''
-    return pack_int(len(data), size) + data
+    return pack_uint(len(data), size) + data
 
 def pack_bytes_list(content: list[bytes], size: int) -> bytes:
     data = b''.join(content)
-    return pack_int(len(data), size) + data
+    return pack_uint(len(data), size) + data
 
 # Unpack constructs
 
-def unpack_int(raw: bytes, pos: int, size: int) -> int:
-    return int.from_bytes(raw[pos:pos+size], 'big')
+def unpack_uint(raw: bytes, pos: int = 0, size: int|None = None) -> int:
+    if size is None:
+        return int.from_bytes(raw[pos:], 'big')
+    else:
+        return int.from_bytes(raw[pos:pos+size], 'big')
+
+def unpack_sint(raw: bytes, pos: int = 0, size: int|None = None) -> int:
+    if size is None:
+        return int.from_bytes(raw[pos:], 'big', signed=True)
+    else:
+        return int.from_bytes(raw[pos:pos+size], 'big', signed=True)
 
 def unpack_u8(raw: bytes, pos: int = 0) -> int:
     return int(raw[pos])
@@ -69,17 +81,17 @@ def unpack_u32(raw: bytes, pos: int = 0) -> int:
     return int.from_bytes(raw[pos:pos+4], 'big')
 
 def unpack_str(raw: bytes, pos: int, size: int) -> str:
-    length = unpack_int(raw, pos, size)
+    length = unpack_uint(raw, pos, size)
     data = raw[pos+size:pos+size+length]
     return data.decode()
 
 def unpack_bytes(raw: bytes, pos: int, size: int) -> bytes:
-    length = unpack_int(raw, pos, size)
+    length = unpack_uint(raw, pos, size)
     data = raw[pos+size:pos+size+length]
     return data
 
 def unpack_u8_list(raw: bytes, pos: int, size: int) -> list[int]:
-    length = unpack_int(raw, pos, size)
+    length = unpack_uint(raw, pos, size)
     if length == 0:
         return []
     data = raw[pos+size:pos+size+length]
@@ -87,7 +99,7 @@ def unpack_u8_list(raw: bytes, pos: int, size: int) -> list[int]:
     return list(data)
 
 def unpack_u16_list(raw: bytes, pos: int, size: int) -> list[int]:
-    length = unpack_int(raw, pos, size)
+    length = unpack_uint(raw, pos, size)
     if length == 0:
         return []
     data = raw[pos+size:pos+size+length]
@@ -95,7 +107,7 @@ def unpack_u16_list(raw: bytes, pos: int, size: int) -> list[int]:
 
 def unpack_bytes_list(raw: bytes, pos: int, size1: int, size2: int) -> list[int]:
     if size1 > 0:
-        length = unpack_int(raw, pos, size1)
+        length = unpack_uint(raw, pos, size1)
     else: # by the end of raw block
         length = len(raw) - pos
     if length == 0:

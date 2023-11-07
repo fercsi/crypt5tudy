@@ -21,10 +21,10 @@ class Asn1Integer(Asn1Object):
         return self.value
 
     def to_ber(self):
-        return pack_int(self.value, self.length)
+        return pack_uint(self.value, self.length)
 
     def from_ber(self, raw: bytes):
-        self.value = unpack_int(raw, 0, len(raw))
+        self.value = unpack_uint(raw, 0, len(raw))
         self.length = len(raw)
 
     def _repr_content(self, level: int):
