@@ -28,6 +28,18 @@ from util.asn1 import *
     (   '02 02 01 02',
         ('Name',),
         'Name[INTEGER]: 258'   ),
+    (   '02 01 7f',
+        None,
+        '[INTEGER]: 127'   ),
+    (   '02 01 80',
+        None,
+        '[INTEGER]: -128'   ),
+    (   '02 02 00 80',
+        None,
+        '[INTEGER]: 128'   ),
+    (   '02 02 80 00',
+        None,
+        '[INTEGER]: -32768'   ),
     (   '02 81 81 01' + '00' * 128,
         (None, 'dec'),
         '[INTEGER]: ' + str(1<<1024)   ),
@@ -276,11 +288,16 @@ def test_create_boolean(value, result):
 # ==== INTEGER, TYPE 2 ====
 @pytest.mark.parametrize('value, result', (
     (0, '020100'),
-    (182, '0201b6'),
+    (127, '02017f'),
+    (128, '02020080'),
+    (255, '020200ff'),
     (258, '02020102'),
+    (-128, '020180'),
+    (-129, '0202ff7f'),
     (1<<1008, '027f01' + '00'*126),
     (1<<1016, '02818001' + '00'*127),
     (1<<2040, '0282010001' + '00'*255),
+    (-1<<2040, '02820100ff' + '00'*255),
 ))
 def test_create_integer(value, result):
     obj = Asn1Integer(value)

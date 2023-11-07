@@ -11,7 +11,7 @@ def pack_uint(content: int, size: int|None = None) -> bytes:
 
 def pack_sint(content: int, size: int|None = None) -> bytes:
     if size is None:
-        c = c if content >= 0 else content + 1
+        c = content if content >= 0 else content + 1
         size = (c.bit_length() >> 3) + 1
     return content.to_bytes(size, 'big', signed=True)
 
