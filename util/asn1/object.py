@@ -93,28 +93,33 @@ class Asn1Object:
             return self.format_data(self.data, level + 1)
         return '~'
 
-    def format_data(self, data: bytes, level: int) -> str:
-        if self.format == 'dec':
+    def format_data(self, data: bytes, level: int, *, format: str|None = None) -> str:
+        if format is None:
+            format = self.format
+        # In contrast to INTEGER values are treated as unsigned
+        if format == 'dec':
             return str(int.from_bytes(data, 'big'))
-        if self.format == 'hex':
-            return data.hex()
-        if self.format == 'bin':
-            return ''.join(f'{b:0>8b}' for b in data)
-        if self.format == 'hex_block':
+        if format == 'hex':
+            return '0x' + data.hex()
+        if format == 'dec_hex':
+            return f"{int.from_bytes(data, 'big')} (0x{data.hex()})"
+        if format == 'bin':
+            return '0b' + ''.join(f'{b:0>8b}' for b in data)
+        if format == 'hex_block':
             text = '\n'
             for i in range(0, len(data), 16):
                 text += '  ' * level \
                             + ' '.join(f'{b:0>2x}' for b in data[i:i+16]) + '\n'
             return text[:-1]
-        if self.format == 'bin_block':
+        if format == 'bin_block':
             text = '\n'
             for i in range(0, len(data), 4):
                 text += '  ' * level \
                             + ' '.join(f'{b:0>8b}' for b in data[i:i+4]) + '\n'
             return text[:-1]
-        if self.format == 'str':
+        if format == 'str':
             return repr(data.decode('utf8', errors='replace'))
-        if self.format[:4] == 'str_':
-            encoding = self.format[4:]
+        if format[:4] == 'str_':
+            encoding = format[4:]
             return repr(data.decode(encoding, errors='replace'))
         raise ValueError(f"unknown data format '{format}'")

@@ -8,7 +8,7 @@ class Asn1Integer(Asn1Object):
     _type_id = 2
     _type_name = 'INTEGER'
 
-    _default_format = 'dec'
+    _default_format = 'auto'
     value: int = 0
     length: int|None = None
 
@@ -28,6 +28,19 @@ class Asn1Integer(Asn1Object):
         self.length = len(raw)
 
     def _repr_content(self, level: int):
-        if self.format == 'dec':
+        # In contrast to other types values are treated as signed
+        if self.format == 'auto':
+            if self.value == 0:
+                return '0'
+            format = 'dec_hex' if self.value.bit_length() <= 64 else 'hex_block'
+        else:
+            format = self.format
+        if format == 'dec':
             return str(self.value)
-        return self.format_data(self.to_ber(), level + 1)
+        if format == 'hex':
+            return hex(self.value)
+        if format == 'dec_hex':
+            return f'{self.value} ({hex(self.value)})'
+        if format == 'bin':
+            return bin(self.value)
+        return self.format_data(self.to_ber(), level + 1, format=format)

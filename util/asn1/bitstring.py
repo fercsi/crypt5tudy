@@ -118,7 +118,16 @@ class Asn1BitString(Asn1Object):
         if self._constructed or self._encapsulated:
             return super()._repr_content(level)
         text = self.format_data(self.data, level + 1)
-        if self.format in ('bin', 'bin_block'):
+#>        if self.format in ('bin', 'bin_block'):
+#>            not_used = -self._length & 7
+#>            if not_used:
+#>                text = text[:-not_used] + '-' * not_used
+        if self.format == 'bin':
+            not_used = -self._length & 7
+            if not_used:
+                text = text[:-not_used]
+            text = text[2:]
+        if self.format == 'bin_block':
             not_used = -self._length & 7
             if not_used:
                 text = text[:-not_used] + '-' * not_used
