@@ -9,7 +9,7 @@ def fail(errstr: str|None = None):
     if errstr is not None:
         print(errstr, file=sys.stderr)
     print(f"Usage: {sys.argv[0]} [TYPE] [PARAM]", file=sys.stderr)
-    sys.exit(1)
+    sys.exit(errstr is not None)
 
 def create_rsa_key(size: int):
     r = Rsa(size)
@@ -47,6 +47,5 @@ def main():
     if key_type == 'rsa':
         key = create_rsa_key(key_param)
     print(key, end='')
-    return 0
 
 main()
