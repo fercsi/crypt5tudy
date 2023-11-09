@@ -1,17 +1,13 @@
 #!/usr/bin/python3
 # General form
 # y^2 + a1*x*y + a3*y = x^3 + a2*x^2 + a4*x + a6
-# Weierstrass form (secp*r1)
+# Weierstrass form (e.g. secp*r1)
 # y^2 = x^3 + ax + b 
-# Montgomery form (25519, 448)
+# Montgomery form (e.g. 25519, 448)
 # y^2 = x^3 + A*x^2 + x
 
 from typing import NamedTuple
 from .modular import Modular
-
-#>class ECPoint(NamedTuple):
-#>    x: int
-#>    y: int
 
 def Weierstrass(*, a, b, p):
     # https://medium.com/asecuritysite-when-bob-met-alice/adding-points-in-elliptic-curve-cryptography-a1f0a1bce638
@@ -88,10 +84,9 @@ def Weierstrass(*, a, b, p):
     return _EC
 
 def Montgomery(*, A, p, bits):
-    # by^2 = x^3 + ax^2 + x
+    # y^2 = x^3 + Ax^2 + x
     class _EC:
         A: int
-        B: int
         p: int
         bits: int
         u: int

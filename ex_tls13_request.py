@@ -7,12 +7,13 @@ from tls import Client
 
 KEY_SHARE_GROUP = 'x25519' #x448, secp256r1, secp384r1, secp521r1
     # Note: ffdhe2048... does not work, yet
+#>KEY_SHARE_GROUP = 'ffdhe2048'
 
 def fail(errstr: str|None = None):
     if errstr is not None:
         print(errstr, file=sys.stderr)
     print(f"Usage: {sys.argv[0]} URL", file=sys.stderr)
-    sys.exit(1)
+    sys.exit(errstr is not None)
 
 def retrieve(url: str):
     match = re.match(r'((\w+)://)?([^/:]+)(:(\d+))?(.*)', url)

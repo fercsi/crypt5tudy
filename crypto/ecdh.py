@@ -57,16 +57,6 @@ class ECDHWeierstrass:
 
 
 class ECDHMontgomery:
-#>    # NOTE: ECDH packing is little endian!
-#>    def __init__(self, group: WeierstrassGroup|MontgomeryGroup):
-#>        self.group = group
-#>        if isinstance(group, WeierstrassGroup):
-#>            self.ec = ec.Weierstrass(a=group.a, b=group.b)
-#>        elif isinstance(group, MontgomeryGroup):
-#>            self.ec = ec.Montgomery(A=group.A, p=group.p, bits=group.bits)
-#>        else:
-#>            raise TypeError('Invalid EC group')
-
     def __init__(self, group: MontgomeryGroup):
         self.group = group
         self.ec = ec.Montgomery(A=group.A, p=group.p, bits=group.bits)

@@ -7,9 +7,9 @@ import crypto
 
 from .connect import Connect
 from .message import Message
-from .ecdh import ECDH
-from .ffdh import FFDH
-from .groupinfo import *
+from crypto.ecdh import ECDH
+from crypto.ffdh import FFDH
+from crypto.groupinfo import *
 from .keyexchange import KeyExchange
 from util.verbose import *
 
@@ -22,7 +22,7 @@ class Client(Connect):
     def __init__(self, *,
             hostname: str, port: int = 443, timeout: float = 30.0,
             key_share_group: str = 'x25519',
-            mode: str = 't',
+            mode: str = 'b',
             verbosity: int = 0,
         ):
         verbose(1, verbosity, f"Initialize TLS connection...")

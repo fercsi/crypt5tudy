@@ -49,8 +49,11 @@ class Connect(ABC):
             application_data = self.application_data[:size]
             self.application_data = self.application_data[size:]
         else:
-            while len(self.application_data) == 0:
-                self.receive_record()
+            try:
+                while len(self.application_data) == 0:
+                    self.receive_record()
+            except:
+                pass # Amen
             application_data = self.application_data
             self.application_data = bytearray()
         if self.text_mode:

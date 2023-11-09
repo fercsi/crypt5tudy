@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 
+import math
 import secrets
 from crypto.modular import Modular
 from util.serialize import *
@@ -15,8 +16,10 @@ class FFDH:
         size = bits + 7 >> 3
 
         g = self.M(self.group.g)
+        p = self.group.p
+        q = p >> 1
         if priv is None:
-            priv = secrets.randbelow(self.group.p)
+            priv = secrets.randbelow(q - 1) + 1
         if isinstance(priv, bytes):
             priv = int.from_bytes(priv, size)
         pub_m = g ** priv
