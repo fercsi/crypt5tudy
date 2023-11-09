@@ -95,3 +95,6 @@ https://doi.org/10.6028/NIST.FIPS.202
 
 **Object Identifier Reference**  
 `https://oidref.com/`
+
+**RFC7292 - PKCS #12: Personal Information Exchange Syntax v1.1**  
+`https://datatracker.ietf.org/doc/html/rfc7292`

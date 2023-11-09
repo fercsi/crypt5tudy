@@ -1,20 +1,15 @@
 # TODO
 
-Own implementation of:
+Implement ASN.1 Generalized time for certificates
+Implement further ASN.1 strings
+Implement RFC-s more detailed in PemAsn1 (E.g. cert extensions)
 
-- AES 128/256 (192?)
-- HMAC
-- SHA 256/384
-
-Further algorithms to implement:
+Algorithms to implement:
 
 - ffdf
 - CHACHA20/POLY1305
 
 error messages
 
-## ASN.1
+TLS warning = 'show', # skip, fatal
 
-- Every types may be formatted in hex form
-- getitem/setitem in bit string and octet string
-- implement further types
