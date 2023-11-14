@@ -105,8 +105,10 @@ class Asn1BitString(Asn1Object):
         super().process_encapsulated(self.data)
 
     def to_ber(self):
-        if self._constructed or self._encapsulated:
+        if self._constructed:
             return super().to_ber()
+        if self._encapsulated:
+            return b'\0' + super().to_ber()
         return pack_u8(-self._length & 7) + self.data
 
     def from_ber(self, raw: bytes):
