@@ -25,14 +25,23 @@ class Asn1:
     @staticmethod
     def to_ber(asn1_object: Asn1Object) -> bytes:
         content = asn1_object.to_ber()
-        asn1_type = asn1_object._type_id | (0x20 if asn1_object._constructed else 0)
+        asn1_byte1 = asn1_object._type_id
+        asn1_byte2 = None
+        if asn1_byte1 > 0x30:
+            asn1_byte2 = ans1_byte1
+            ans1_byte1 = 0x31
+        asn1_byte1 |= asn1_object._constructed << 5
+        asn1_byte1 |= asn1_object._class << 6
+        asn1_type = pack_u8(asn1_byte1)
+        if asn1_byte2 is not None:
+            asn1_type += pack_u8(asn1_byte2)
         length = len(content)
         if length < 0x80:
             raw_len = pack_u8(length)
         else:
             raw_len = pack_uint(length)
             raw_len = pack_u8(0x80 + len(raw_len)) + raw_len
-        return pack_u8(asn1_type) + raw_len + content
+        return asn1_type + raw_len + content
 
     @staticmethod
     def from_ber(raw: bytes):
