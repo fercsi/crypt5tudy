@@ -26,4 +26,4 @@ class Asn1NotImplemented(Asn1Object):
         text += '  ' * (level + 1) + f'Content ='
         if self._constructed or self._encapsulated:
             return text + super()._repr_content(level + 1)
-        return text + self.format_data('hex_block', self.data, level + 2)
+        return text + self.format_data(self.data, level + 2)
