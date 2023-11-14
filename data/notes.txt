@@ -1,0 +1,8 @@
+## OpenSSH PEM files
+
+openssh PEM files do not contain ASN.1 DER objects, but a proprietary
+OpenSSH format.
+
+## PKCS12 files
+
+PKCS12 files (pfx, p12) are in BER format. See also RFC7292.
