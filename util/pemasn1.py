@@ -9,6 +9,8 @@ class PemAsn1Object:
 
     def import_pem(self, pem_text: str) -> None:
         self.pem_type, ber_content = Pem.parse(pem_text)
+        if ber_content[:7] == b'openssh':
+            raise TypeError('information embedded in PEM data does not look to be ASN.1 object')
         self.content = Asn1.from_ber(ber_content)
         if self.pem_type in _POST_PROCESS:
             process = _POST_PROCESS[self.pem_type]
@@ -32,31 +34,31 @@ _POST_PROCESS = {
     'RSA PRIVATE KEY': {
         'annotate': ('RSA PRIVATE KEY', [
             ('version',),
-            ('modulus', 'block'),
+            ('modulus',),
             ('publicExponent',),
-            ('privateExponent', 'block'),
-            ('prime1', 'block'),
-            ('prime2', 'block'),
-            ('exponent1', 'block'),
-            ('exponent2', 'block'),
-            ('coefficient', 'block'),
+            ('privateExponent',),
+            ('prime1',),
+            ('prime2',),
+            ('exponent1',),
+            ('exponent2',),
+            ('coefficient',),
         ]),
     },
     'DSA PRIVATE KEY': {
         'annotate': ('DSA PRIVATE KEY', [
             ('version',),
-            ('priv', 'block'),
-            ('pub', 'block'),
-            ('P', 'block'),
-            ('Q', 'block'),
-            ('G', 'block'),
+            ('priv',),
+            ('pub',),
+            ('P',),
+            ('Q',),
+            ('G',),
         ]),
     },
     'DSA PARAMETERS': {
         'annotate': ('DSA PARAMETERS', [
-            ('P', 'block'),
-            ('Q', 'block'),
-            ('G', 'block'),
+            ('P',),
+            ('Q',),
+            ('G',),
         ]),
     },
     'PRIVATE KEY': { # RFC5958
@@ -75,16 +77,42 @@ _POST_PROCESS = {
         'encapsulated': [[1]],
         'annotate': ('PUBLIC KEY', [
             ('Algorithm', [('ID',), ('Parameters',)]),
-            ('Key (encapsulated)', [
-                ('Key', [
-                    ('Modulus',),
-                    ('Exponent',),
-                ])
-            ])
+            ('Key', )
+        ])
+    },
+    'CERTIFICATE': { # RFC5280
+        'encapsulated': [[0,6,1]],
+        'annotate': ('CERTIFICATE', [
+            ('tbsCertificate', [
+                ('version', ),
+                ('serialNumber', 'hex'),
+                ('signature', [
+                    ('algorithm', ),
+                    ('parameters', ),
+                ]),
+                ('issuer', ),
+                ('validity', [
+                    ('notBefore', ),
+                    ('notAfter', ),
+                ]),
+                ('subject', ),
+                ('subjectPublicKeyInfo', [
+                    ('algorithm', ),
+                    ('subjectPublicKey', ),
+                ]),
+#>                ('issuerUniqueID', ), # optionals
+#>                ('subjectUniqueID', ),
+#>                ('extensions', ),
+            ]),
+            ('signatureAlgorithm', [
+                ('algorithm', ),
+                ('parameters', ),
+            ]),
+            ('signatureValue',),
         ])
     },
     'CERTIFICATE REQUEST': { # RFC2986
-        'encapsulated': [[2], [0,2,1]],
+        'encapsulated': [[0,2,1]],
         'annotate': ('CERTIFICATE REQUEST', [
             ('certificationRequestInfo',[
                 ('version',),
