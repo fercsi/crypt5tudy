@@ -1,9 +1,26 @@
 #!/usr/bin/python3
 # ASN.1 BER/DER, ITU-T X.690
 
-from typing import Self
+from typing import Self, NamedTuple
+
+class Asn1ObjectInfo(NamedTuple):
+    type_id: int
+    type_name: str | None
+    constructed: bool
+    object_class: int
+
+    def __str__(self) -> str:
+        class_str = ['Universal','Application','Context specific','Private'][self.object_class]
+        if self.type_name is not None and self.type_name != 'NOT IMPLEMENTED':
+            text = f'Type: {self.type_name} ({self.type_id} @ {class_str})\n'
+        else:
+            text = f'Type: {self.type_id} @ {class_str}\n'
+        text += 'Construction: ' + ('constructed' if self.constructed else 'primitive') + '\n'
+        return text
 
 class Asn1Object:
+    _type_id: int = -1
+    _type_name: str|None = None
     _constructed: bool = False
     _encapsulated: bool = False
     _class: int # 0..3
@@ -18,6 +35,15 @@ class Asn1Object:
         self.content = []
         self.format = self._default_format
         self.data = None
+        self._class = 0
+
+    def info(self):
+        return Asn1ObjectInfo(
+            type_id=self._type_id,
+            type_name=self._type_name,
+            constructed=self._constructed,
+            object_class=self._class
+        )
 
     def annotate(self, name: str|None, items: list[tuple]|None = None):
         self.name = name
