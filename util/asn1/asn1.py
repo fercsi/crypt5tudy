@@ -17,6 +17,7 @@ _TYPE_HANDLERS = {
     16: Asn1Sequence,
     17: Asn1Set,
     19: Asn1PrintableString,
+    22: Asn1IA5String,
     23: Asn1UtcTime,
 }
 

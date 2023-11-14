@@ -260,6 +260,32 @@ from util.asn1 import *
           '  [PRINTABLE STRING]: \'\'',
           '  [PRINTABLE STRING]: 0x686578',
           '  [PRINTABLE STRING]: \'ASN.1\'' )   ),
+    # ==== IA5 STRING, TYPE 22 ====
+    (   '16 00',
+        None,
+        '[IA5 STRING]: \'\''   ),
+    (   '16 04 41 42 43 44',
+        None,
+        '[IA5 STRING]: \'ABCD\''   ),
+    (   '16 05 72 c2 b2 cf 80', # No error message, but conversion fails
+        None,
+        '[IA5 STRING]: \'r����\''   ),
+    (   '16 03 e2 98 ba',
+        None,
+        '[IA5 STRING]: \'���\''   ),
+    (   '16 05 72 c2 b2 cf 80',
+        (None, 'hex_block'),
+        ( '[IA5 STRING]:',
+          '  72 c2 b2 cf 80' )   ),
+    (   '36 00',
+        None,
+        '*[IA5 STRING]: ~'   ),
+    (   '36 0e   16 00   16 03 68 65 78   16 05 41 53 4e 2e 31',
+        (None, [(None,), (None, 'hex')]),
+        ( '*[IA5 STRING]:',
+          '  [IA5 STRING]: \'\'',
+          '  [IA5 STRING]: 0x686578',
+          '  [IA5 STRING]: \'ASN.1\'' )   ),
     # ==== UTC TIME, TYPE 23 ====
     (   '17 0d 3233 3131 3033 3230 3132 3239 5a',
         None,
@@ -522,6 +548,30 @@ def test_create_printablestring_constructed():
     assert Asn1.to_ber(obj) == bytes.fromhex('33 08'
             + '13 04 41 42 43 44'
             + '13 00')
+
+
+# ==== IA5 STRING, TYPE 2 ====
+@pytest.mark.parametrize('text, result', (
+    ( '', '16 00' ),
+    ( 'ABCD', '16 04 41 42 43 44' ),
+    ( 'x'*1975, '16 82 07 b7' + '78'*1975 ),
+))
+def test_create_printablestring(text, result):
+    result = bytes.fromhex(result)
+    obj = Asn1IA5String(text)
+    assert Asn1.to_ber(obj) == result
+    obj = Asn1IA5String()
+    obj.text = text
+    assert Asn1.to_ber(obj) == result
+
+def test_create_printablestring_constructed():
+    obj = Asn1IA5String(constructed = True)
+    assert Asn1.to_ber(obj) == bytes.fromhex('36 00')
+    obj.append(Asn1IA5String('ABCD'))
+    obj.append(Asn1IA5String())
+    assert Asn1.to_ber(obj) == bytes.fromhex('36 08'
+            + '16 04 41 42 43 44'
+            + '16 00')
 
 
 # ==== UTC TIME, TYPE 23 ====

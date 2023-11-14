@@ -14,6 +14,6 @@ from .sequence import Asn1Sequence
 from .set import Asn1Set
 from .utctime import Asn1UtcTime
 
-from .string import Asn1Utf8String, Asn1PrintableString
+from .string import Asn1Utf8String, Asn1PrintableString, Asn1IA5String
 
 from .notimplemented import Asn1NotImplemented

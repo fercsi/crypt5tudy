@@ -42,3 +42,8 @@ class Asn1PrintableString(Asn1String):
     _type_id = 19
     _type_name = 'PRINTABLE STRING'
     _default_format = 'str_ascii'
+
+class Asn1IA5String(Asn1String):
+    _type_id = 22
+    _type_name = 'IA5 STRING'
+    _default_format = 'str_ascii'
