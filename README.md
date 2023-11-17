@@ -40,6 +40,10 @@ Currently implemented features:
 - [ASN.1 objects](doc/asn1.md) (OpenSSL documents, pfx)
   - BER/DER format
   - PEM
+- [Example programs](doc/examples.md)
+  - **berutil**: Utility to analyse, change or create BER/DER or PEM files
+  - **genkey**: Generate OpenSSL compatible private key
+  - **tls13req**: A TLS1.3 client sending HTTP requests and receiving response
 
 ## Limitations, Warranty ⚠️
 
@@ -54,11 +58,11 @@ In addition to the above:
   code, understand it, and implement a proper one.
 - **Education**: I would appreciate it if you  would email me if you use it in
   any way so that I know about it:
-  [ferenc.vajda@email.com](mailto:ferenc.vajda@email.com)
+  [ferenc.vajda@gmail.com](mailto:ferenc.vajda@gmail.com)
 - **Media (including videos, books etc.)**:  On one hand consider the licence,
   on the  other hand please email  me if you want  to use the content  of this
   repository in this way. I would appreciate it.
-  [ferenc.vajda@email.com](mailto:ferenc.vajda@email.com)
+  [ferenc.vajda@gmail.com](mailto:ferenc.vajda@gmail.com)
 
 ### Performance and optimization
 
@@ -89,6 +93,12 @@ generation) have recommendations that I  haven't implemented, and I even don't
 plan  to,  etc.  On  the  other  hand,  I  don't  want  to  think  about  what
 vulnerabilities might still be in the system,  because nobody will use it in a
 live environment (right?).
+
+### No PyPI module
+
+Although some parts  are suitable for PyPI,  most of the code  is not suitable
+for everyday use. For this reason, I do not plan to make it into a PyPI module
+for the time being.
 
 ## Planned activities
 
