@@ -1,8 +1,27 @@
 # ASN.1 Implementation
 
-ASN.1 has  been implemented only  partially (so far). However,  the most
-important types can be used. The goal  was to be able to read and create
-openssl files
+The **ASN.1** standard (_ITU-T X.680-693_) is a complex communication solution
+used in  many applications. It is  basically a well-defined object  system for
+which the  standard provides among  other features a number  of representation
+forms. One  of the  most common  ones is  the binary  **BER** format  (and its
+**DER** variant,  with more strict  rules), which  s been implemented  in this
+study at a certain level. It is important to note that tool accepts BER inputs
+when  read  (permissive), but  the  output  is  more  strict and  follows  DER
+specification.
+
+Since BER/DER is a  binary format, it is common to store  it in **PEM** format
+based on  base64 encoding,  which is  also part of  the implementation.  It is
+worth noting here that not only ASN.1 BER objects can be stored in PEM format,
+but also other binary content. One  example is OpenSSH's own (proprietary) key
+format. This cannot currently be read and written by this tool.
+
+## Limitations
+
+ASN.1 has  been implemented only  partially (so  far, at least).  However, the
+most important types can be used. The  goal was to be able to read, manipulate
+and create OpenSSL compatible files.
+
+Following table shows which objects has been implemented so far:
 
 | ID | Name              | P/C  |  Imp. |
 | -: | :---------------- | :--- | :---: |
@@ -44,10 +63,10 @@ openssl files
 | 36 | RELATIVE OID IRI  | P    |   ❌  |
 
 P: Primitive  
-C: Constructive
+C: Constructed
 
-Also note, that there are no constraints in this solution, including the
-basic definitions. There is no check  against usage mistakes, but if you
-use this  tool correctly, the results  will be correct. E.g.  it is your
-responsibility to set correct strings in a `PRINTABLE STRING` object.
-TODO ✅ | ❌
+Also  note, that  there are  no constraints  in this  solution, including  the
+object types' basic definition. There is  no check against usage mistakes, but
+if you  use this  tool properly,  the results will  be correct,  DER formatted
+objects.  E.g.  it  is  your  responsibility  to  set  correct  strings  in  a
+`PrintableString` object.
