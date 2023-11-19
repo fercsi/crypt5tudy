@@ -32,9 +32,17 @@ class Tool:
             obj.import_pem(pem_content.decode("ascii", errors="ignore"))
             self.pem_type = obj.pem_type
             self.content = obj.content
-        except Exception as exc:
-            self.content = Asn1.from_ber(pem_content)
-            self.pem_type = 'UNKNOWN'
+        except ValueError as exc:
+            try:
+                self.content = Asn1.from_ber(pem_content)
+            except:
+                self.content = pem_content
+            self.pem_type = 'NONE'
+        except TypeError as exc: # Non-BER PEM
+            try:
+                self.pem_type, self.content = Pem.parse(pem_content.decode("ascii", errors="ignore"))
+            except:
+                raise ValueError("File does not look to be PEM or BER/DER")
 
     def parse_selector(self, selector: str) -> list[int]:
         parts = selector.split('.')
@@ -77,9 +85,16 @@ class Tool:
         elif fmt == 'i': # type info
             text = str(obj.info())
         elif fmt == 'b': # ber
-            text = Asn1.to_ber(obj)
+            if isinstance(obj, bytes):
+                text = obj
+            else:
+                text = Asn1.to_ber(obj)
         elif fmt == 'p': # pem
-            text = Pem.create(args.pem_type or self.pem_type, Asn1.to_ber(obj))
+            if isinstance(obj, bytes):
+                text = obj
+            else:
+                text = Asn1.to_ber(obj)
+            text = Pem.create(args.pem_type or self.pem_type, text)
 #>        elif fmt == 'j': # json - Asn1.to_object() is Support, yet
 #>        elif fmt == 'y': # yaml - Asn1.to_object() is Support, yet
         else:
@@ -274,6 +289,10 @@ def get_args():
           8. generate output  
           
         The order within a category is preserved.
+
+        Note: This tool also handles general PEM files if no BER parsing or
+        manipulation is requested. This means, unpacking and packing general
+        PEM files is possible.
     """, epilog="""
         SELECTOR: root, root.1 (or 1), root.3.0.4 (or 3.0.4)  
           
