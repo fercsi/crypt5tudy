@@ -117,7 +117,8 @@ yet, when and how I will implement them.
 - TLS1.3 server solution implementation (DigSig investigation needed)
 - More TLS features (handshake  messages, extensions, maybe 0-RTT). Note, that
   no TLS1.2 or earlier implementations are currently planned,
-- OpenSSH Key PEM format
+- OpenSSH Key PEM format: encryped + create
+- New ASN.1 features: Generalizedatime (for certs), further stringa...
 - SSH, SCP (maybe SFTP)
 
 ### Code improvements
@@ -132,3 +133,4 @@ The code needs refactoring at several points
 Some system-level features would also be useful:
 
 - Multilevel verbosity solution to be able to follow the process while running
+- TLS handshake warning handling (ignore, fatal, show)
