@@ -48,6 +48,8 @@ class Rsa:
 
         The only aspect taken into account was, that they work properly.
         """
+        # Note: 2 leading ones in primes, so that the multiplication is of the
+        # expected number of bits.
         psize = self.size >> 1
         qsize = self.size - psize
         e = self.default_e
@@ -55,12 +57,12 @@ class Rsa:
             p = e + 1
             q = p
             while math.gcd(p - 1, e) != 1:
-                p = random_prime_with_bits(psize)
+                p = random_prime_with_bits(psize, leading_ones=2)
             while math.gcd(q - 1, e) != 1:
-                q = random_prime_with_bits(qsize)
+                q = random_prime_with_bits(qsize, leading_ones=2)
         else:
-            p = random_prime_with_bits(psize)
-            q = random_prime_with_bits(qsize)
+            p = random_prime_with_bits(psize, leading_ones=2)
+            q = random_prime_with_bits(qsize, leading_ones=2)
         self.generate_rsa_parameters(p, q, e)
 
     def generate_rsa_parameters(self, p: int, q: int, e: int|None = None):
