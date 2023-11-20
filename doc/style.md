@@ -1,6 +1,6 @@
 # Coding Style
 
-https://numpydoc.readthedocs.io/en/latest/format.html
+The coding style should follow [NumPy coding style guide](https://numpydoc.readthedocs.io/en/latest/format.html)
 
 ## Documentation
 
