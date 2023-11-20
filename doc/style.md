@@ -43,6 +43,7 @@ class MyClass(MyParent):
         ------
         BrokenPipeError
             Description
+        """
 ```
 
 Further sections: Yields (generators), Receives (via send)
