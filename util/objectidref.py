@@ -31,6 +31,9 @@ OBJECT_ID_REFERENCE = {
     '1.2.840.113549.1.12.10.1': 'pkcs-12BagIds',
     '1.2.840.113549.1.12.10.1.2': 'pkcs-8ShroudedKeyBag',
 
+    # iso(1) org(3) dod(6) internet(1) security(5) mechanisms(5) pkix(7) pe(1)
+    '1.3.6.1.5.5.7.1.1': 'authorityInfoAccess',
+
     # iso(1) org(3) oiw(14) secsig(3) algorithms(2)
     '1.3.14.3.2.12': 'dsa',
     '1.3.14.3.2.26': 'hashAlgorithmIdentifier',
@@ -64,6 +67,11 @@ OBJECT_ID_REFERENCE = {
 
     '2.5.29': 'certificateExtension',
     '2.5.29.14': 'subjectKeyIdentifier',
+    '2.5.29.15': 'keyUsage',
+    '2.5.29.17': 'subjectAltName',
     '2.5.29.19': 'basicConstraints',
+    '2.5.29.31': 'cRLDistributionPoints',
+    '2.5.29.32': 'certificatePolicies',
     '2.5.29.35': 'authorityKeyIdentifier',
+    '2.5.29.37': 'extKeyUsage',
 }

@@ -2,6 +2,8 @@
 # RFC8446
 
 from util.serialize import *
+from util.asn1 import Asn1
+from tls.types import HandshakeType
 from .handshake import Handshake
 from tls.extension import Extension, pack_extension_list, unpack_extension_list
 
@@ -40,12 +42,10 @@ class Certificate(Handshake):
             entry = CertificateEntry(self.certificate_type)
             start = pos
             pos += 3 + unpack_u24(raw, pos)
-            pos += 3 + unpack_u24(raw, pos)
+            pos += 2 + unpack_u16(raw, pos)
             entry.unpack(raw[start:pos])
             self.certificate_entries.append(entry)
-#>        certificate_list = unpack_byte_list(raw, pos, 3, 
-#>        rawexts = unpack_bytes(raw, pos, 2)
-#>        self.unpack_extensions(rawexts)
+        print(self)
 
     def represent(self, level: int = 0):
         crc = '~' if self.certificate_request_context == b'' else self.certificate_request_context.hex()
@@ -82,12 +82,17 @@ class CertificateEntry:
         else:
             self.key_info = content
         pos = 3 + len(content)
-        self.extensions = unpack_extension_list(raw, pos, 8, 3)
+        self.extensions = unpack_extension_list(raw, pos,
+                                        HandshakeType.certificate, lensize=2)
+
+    def get_cert_info(self):
+        return Asn1.from_ber(self.cert_data)
 
     def represent(self, level: int = 0) -> str:
         ind = '  '*level
         if self.cert_data is not None:
-            text = ind + f'- CertData: {self.cert_data.hex()}\n'
+            cert_info = self.get_cert_info()
+            text = ind + f'- CertData:\n{cert_info._represent(level+1)}\n'
         elif self.key_info is not None:
             text = ind + f'- ASN1_subjectPublicKeyInfo: {self.key_info.hex()}\n'
         ext_str = ''
