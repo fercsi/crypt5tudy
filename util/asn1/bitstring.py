@@ -101,7 +101,7 @@ class Asn1BitString(Asn1Object):
             stop += self._length
         return range(start, stop, step)
 
-    def process_encapsulated(self):
+    def process_encapsulated(self, *args, **kwargs):
         super().process_encapsulated(self.data)
 
     def to_ber(self):

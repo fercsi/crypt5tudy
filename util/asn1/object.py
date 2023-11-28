@@ -62,7 +62,12 @@ class Asn1Object:
         self._encapsulated = True
         self.content.append(asn1_object)
 
-    def process_encapsulated(self, raw: bytes|None = None):
+    def process_encapsulated(self, raw: bytes|None = None,
+                                        *, selector: list[int]|None = None):
+        if selector:
+            self.content[selector[0]].process_encapsulated(raw, \
+                                                        selector=selector[1:])
+            return
         from .asn1 import Asn1
         self._encapsulated = True
         self.content = []
