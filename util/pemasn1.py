@@ -15,11 +15,8 @@ class PemAsn1Object:
         if self.pem_type in _POST_PROCESS:
             process = _POST_PROCESS[self.pem_type]
             if 'encapsulated' in process:
-                for pos in process['encapsulated']:
-                    content = self.content
-                    for idx in pos:
-                        content = content.content[idx]
-                    content.process_encapsulated()
+                for selector in process['encapsulated']:
+                    self.content.process_encapsulated(selector=selector)
             if 'annotate' in process:
                 self.content.annotate(*process['annotate'])
 
