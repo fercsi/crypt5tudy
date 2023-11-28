@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 # ASN.1 BER/DER, ITU-T X.690
 
+from itertools import islice
 from typing import Self, NamedTuple
 
 class Asn1ObjectInfo(NamedTuple):
@@ -44,6 +45,17 @@ class Asn1Object:
             constructed=self._constructed,
             object_class=self._class
         )
+
+    def __getitem__(self, index: int):
+        if isinstance(index, int):
+            return self.content[index]
+        return islice(self.content, index.start, index.stop, index.step)
+
+    def __len__(self):
+        return len(self.content)
+
+    def __iter__(self):
+        return iter(self.content)
 
     def annotate(self, name: str|None, items: list[tuple]|None = None):
         self.name = name

@@ -35,6 +35,8 @@ class Asn1OctetString(Asn1Object):
         return len(self.data)
 
     def __getitem__(self, index: int|slice):
+        if self._constructed or self._encapsulated:
+            return super().__getitem__(index)
         length = len(self.data)
         if isinstance(index, int):
             if index >= length:

@@ -42,6 +42,8 @@ class Asn1BitString(Asn1Object):
         return self.data
 
     def __getitem__(self, index: int|range):
+        if self._constructed or self._encapsulated:
+            return super().__getitem__(index)
         if isinstance(index, int):
             if index < -self._length:
                 raise IndexError('index out of range')
