@@ -124,6 +124,9 @@ class Asn1Object:
             return self.format_data(self.data, level + 1)
         return '~'
 
+    def represent(self) -> str:
+        return self._repr_content(0)
+
     def format_data(self, data: bytes, level: int, *, format: str|None = None) -> str:
         if format is None:
             format = self.format
