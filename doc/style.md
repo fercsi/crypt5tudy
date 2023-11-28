@@ -1,6 +1,11 @@
 # Coding Style
 
-The coding style should follow [NumPy coding style guide](https://numpydoc.readthedocs.io/en/latest/format.html)
+The coding style should follow
+[NumPy coding style guide](https://numpydoc.readthedocs.io/en/latest/format.html)
+Which is built on
+[re-structured text (reST)](https://docutils.sourceforge.io/rst.html)
+
+Which will be processed by [Sphinx](https://www.sphinx-doc.org/en/master/).
 
 ## Documentation
 
