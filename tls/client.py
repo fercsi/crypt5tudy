@@ -131,6 +131,7 @@ class Client(Connect):
             # TODO: maybe some invalid servername, but usually nothing
             pass
         elif rec_type is tls.Certificate:
+            self.certificates = message.certificate_entries
             # TODO check certificate
             pass
         elif rec_type is tls.CertificateVerify:
