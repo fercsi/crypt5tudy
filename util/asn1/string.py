@@ -11,11 +11,11 @@ class Asn1String(Asn1Object):
         self.data = text.encode()
 
     @property
-    def text(self):
+    def value(self):
         return self.data.decode(self._default_format[4:], errors='replace')
 
-    @text.setter
-    def text(self, text: str):
+    @value.setter
+    def value(self, text: str):
         # Intentionally raise error if encoding fails
         self.data = text.encode(self._default_format[4:])
 

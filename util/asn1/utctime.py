@@ -28,11 +28,11 @@ class Asn1UtcTime(Asn1Object):
 
 
     @property
-    def time(self):
+    def value(self):
         return self._time
 
-    @time.setter
-    def time(self, time: datetime|str|list|tuple):
+    @value.setter
+    def value(self, time: datetime|str|list|tuple):
         if isinstance(time, datetime):
             self._time = copy.deepcopy(time)
         elif isinstance(time, str):
