@@ -31,8 +31,20 @@ OBJECT_ID_REFERENCE = {
     '1.2.840.113549.1.12.10.1': 'pkcs-12BagIds',
     '1.2.840.113549.1.12.10.1.2': 'pkcs-8ShroudedKeyBag',
 
-    # iso(1) org(3) dod(6) internet(1) security(5) mechanisms(5) pkix(7) pe(1)
+    # 1.3.6.1.4.1.11129.2.4.2
+    # 1.3.6.1.4.1.44947.1.1.1
+
+    # iso(1) org(3) dod(6) internet(1) security(5) mechanisms(5) pkix(7)
+    '1.3.6.1.5.5.7.1': 'pe',
     '1.3.6.1.5.5.7.1.1': 'authorityInfoAccess',
+    '1.3.6.1.5.5.7.2': 'qt',
+    '1.3.6.1.5.5.7.2.1': 'cps',
+    '1.3.6.1.5.5.7.3': 'kp',
+    '1.3.6.1.5.5.7.3.1': 'serverAuth',
+    '1.3.6.1.5.5.7.3.2': 'clientAuth',
+    '1.3.6.1.5.5.7.48': 'ad',
+    '1.3.6.1.5.5.7.48.1': 'ocsp',
+    '1.3.6.1.5.5.7.48.2': 'calssuers',
 
     # iso(1) org(3) oiw(14) secsig(3) algorithms(2)
     '1.3.14.3.2.12': 'dsa',
@@ -74,4 +86,11 @@ OBJECT_ID_REFERENCE = {
     '2.5.29.32': 'certificatePolicies',
     '2.5.29.35': 'authorityKeyIdentifier',
     '2.5.29.37': 'extKeyUsage',
+
+    # joint-iso-itu-t(2) international-organizations(23) ca-browser-forum(140) certificate-policies(1) baseline-requirements(2)
+    '2.23.140.1.2.1': 'domain-validated',
+    '2.23.140.1.2.2': 'subject-identity-validated',
+    '2.23.140.1.2.3': 'individual-validated',
 }
+
+
