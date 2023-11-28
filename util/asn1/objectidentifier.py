@@ -26,6 +26,18 @@ class Asn1ObjectIdentifier(Asn1Object):
         else:
             self._arcs = list(arcs)
 
+    @property
+    def oid(self):
+        return '.'.join(str(a) for a in self._arcs)
+
+    @property
+    def oid_name(self):
+        objid = '.'.join(str(a) for a in self._arcs)
+        name = OBJECT_ID_REFERENCE.get(objid, None)
+        if name is not None:
+            return name
+        return objid
+
     def to_ber(self):
         if not self._arcs:
             return b''
