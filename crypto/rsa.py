@@ -1,18 +1,19 @@
 #!/usr/bin/python3
+# RFC2313
 
 import math
 from typing import NamedTuple
-from util.random import random_prime_with_bits
-#>from util.modular import Modular
+from util.random import random_prime_with_bits, random_bytes
 
+# derive from SEQUENCE aka RFC2313/7.
 class RsaKey(NamedTuple):
-    size: int
+    size: int # in bits
     n: int
     e: int
 
 
 class RsaPrivateKey(NamedTuple):
-    size: int
+    size: int # in bits
     n: int
     d: int
     e: int
@@ -30,6 +31,7 @@ class Rsa:
     # use a different one. 65537 is a Fermat prime (others: 3, 5, 17, 257).
     my_private_key: RsaPrivateKey | None
     peer_public_key: RsaKey | None
+    mode: int = 0
 
     def __init__(self, size: int = 2048) -> None:
         self.size = size
@@ -110,6 +112,47 @@ class Rsa:
         msg = pow(cph, d, n)
         size = msg.bit_length() + 7 >> 3
         message = msg.to_bytes(size, 'big')
+        return message
+
+    def _encrypt(self, block_type: int, key: RsaPrivateKey|RsaKey, data: bytes):
+        # RFC2313/8
+        e, n, k = key.e, key.n, key.k >> 3
+        data_length = len(data)
+        if block_type == 0:
+            # 00 || 00 || 00 || D
+            max_size = (k >> 3) - 3
+            if data_length > max_size:
+                raise ValueError("Message too long, cannot be encrypted")
+            encryption_block = data
+        else: # block type 1(private key) or 2(public key)
+            # 00 || BT || PS || 00 || D
+            # len(PS) >= 8
+            max_size = (k >> 3) - 11
+            if data_length > max_size:
+                raise ValueError("Message too long, cannot be encrypted")
+            ps_size = k - data_length - 3
+            ps = random_bytes(ps_size)
+            encryption_block = bytes([block_type]) + ps + b'\0' + data
+
+        x = int.from_bytes(encryption_block, 'big')
+        y = pow(x, e, n)
+        encrypted_data = y.to_bytes(k, 'big')
+        return encrypted_data
+
+    def _decrypt(self, key: RsaPrivateKey|RsaKey, cipherMessage: bytes):
+        n = key.n
+        if isinstance(key, RsaPrivateKey):
+            c = key.d
+        else:
+            c = key.e
+        cph = int.from_bytes(cipherMessage, 'big')
+        msg = pow(cph, c, n)
+        size = msg.bit_length() + 7 >> 3
+        block_type = 0
+        message = msg.to_bytes(size, 'big')
+        if size == (key.size >> 3) - 1: # block_type
+            block_type = message[0]
+            message = message[message.index(b'\0')+1:]
         return message
 
 
