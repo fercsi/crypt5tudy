@@ -30,6 +30,7 @@ OBJECT_ID_REFERENCE = {
     '1.2.840.113549.1.12.10': 'pkcs-12Version1',
     '1.2.840.113549.1.12.10.1': 'pkcs-12BagIds',
     '1.2.840.113549.1.12.10.1.2': 'pkcs-8ShroudedKeyBag',
+    '1.2.840.113549.2': 'digestAlgorithm',
 
     # 1.3.6.1.4.1.11129.2.4.2
     # 1.3.6.1.4.1.44947.1.1.1
@@ -86,6 +87,21 @@ OBJECT_ID_REFERENCE = {
     '2.5.29.32': 'certificatePolicies',
     '2.5.29.35': 'authorityKeyIdentifier',
     '2.5.29.37': 'extKeyUsage',
+
+    # joint-iso-itu-t(2) country(16) us(840) organization(1) gov(101) csor(3) nistAlgorithm(4)
+    '2.16.840.1.101.3.4.2': 'hashAlgs',
+    '2.16.840.1.101.3.4.2.1': 'sha256',
+    '2.16.840.1.101.3.4.2.2': 'sha384',
+    '2.16.840.1.101.3.4.2.3': 'sha512',
+    '2.16.840.1.101.3.4.2.4': 'sha224',
+    '2.16.840.1.101.3.4.2.5': 'sha512-224',
+    '2.16.840.1.101.3.4.2.6': 'sha512-256',
+    '2.16.840.1.101.3.4.2.7': 'sha3-224',
+    '2.16.840.1.101.3.4.2.8': 'sha3-256',
+    '2.16.840.1.101.3.4.2.9': 'sha3-384',
+    '2.16.840.1.101.3.4.2.10': 'sha3-512',
+    '2.16.840.1.101.3.4.2.11': 'shake128',
+    '2.16.840.1.101.3.4.2.12': 'shake256',
 
     # joint-iso-itu-t(2) international-organizations(23) ca-browser-forum(140) certificate-policies(1) baseline-requirements(2)
     '2.23.140.1.2.1': 'domain-validated',
