@@ -1,19 +1,26 @@
 #!/usr/bin/python3
 
+import hashlib
 import re
 import sys
 import argparse
 import yaml
 import datetime as dt
 from pprint import pprint
+from tls.handshake.certificate import CertificateEntry
 
 from tls import Client
+from util.asn1 import *
+from util.pem import Pem
+from crypto.rsa import *
 
 class Tool:
     def run(self) -> None:
         self.process_url(args.url)
         request = self.create_request()
         self.connect()
+        if args.verify_certificates:
+            self.verify_certificates()
         if args.show_certificates:
             for i,cert in enumerate(self.client.certificates, 1):
                 info = cert.get_cert_info()
@@ -89,6 +96,132 @@ class Tool:
         header = header.decode()
         return status_code, status_text, header, body
 
+    def verify_certificates(self):
+        # TODO: This should get into Certificate handshake, but that must be
+        # refactored anyway
+        # TODO: Only SHA256+RSA signed certs are supported
+        cert_info = self.extract_cert_info()
+        print('Loading root certificate')
+        iss = cert_info[-1]['issuer']
+        root = iss[iss.rindex('/') + 1:]
+        rootfile = f'{args.cert_dir}/{root.replace(" ","_")}.pem'
+        try:
+            with open(rootfile, 'r') as f:
+                rootpem = f.read()
+            rootber = Pem.parse(rootpem)[1]
+            rootcert = self.extract_single(rootber)
+            cert_info.append(rootcert)
+            print('    OK')
+        except OSError as exc:
+            print('    Could not load root certificate')
+            print(exc)
+        subci = cert_info[0]
+        print('Checking validity')
+        ok = True
+        for i, ci in enumerate(cert_info):
+            now = dt.datetime.now()
+            if now < ci['notBefore'] or now > ci['notAfter']:
+                ok = False
+                if ci is cert_info[-1]:
+                    print(f'    Local root certificate "{ci["subject"]}" is invalid')
+                    print(f'        file:  {rootfile}')
+                else:
+                    print(f'    Certificate "{ci["subject"]}" is invalid')
+                print(f'        start: {ci["notBefore"].isoformat(timespec="seconds")}')
+                print(f'        end:   {ci["notAfter"].isoformat(timespec="seconds")}')
+        if ok:
+            print('    OK')
+        print('Checking certificate chain & signatures')
+        # TODO: check order
+        ok = True
+        for issci in cert_info[1:]:
+            if issci['subject'] != subci['issuer']:
+                ok = False
+                print('    Invalid certificate chain')
+            calchash = self.digest(subci['tbsc'], 'sha256')
+            d = self.decrypt_signature(subci['signature'], issci['key'])
+            decrhash = self.decode(d)
+            if calchash != decrhash:
+                ok = False
+                print('    Signature error')
+            subci = issci
+        if ok:
+            print('    OK')
+        print('Verifying server information')
+        if self.hostname in cert_info[0]['subjects']:
+            print('    OK')
+        else:
+            print('    Certificate subject does not match hostname')
+        print('Verifying TLS certificate signature')
+        print('    Not implemented')
+#>        raw = self.client.certificate.raw_content
+#>        algorithm = self.client.certificateVerify.algorithm
+#>        signature = self.client.certificateVerify.signature
+#>        print(len(signature), signature.hex())
+#>        d = self.decrypt_signature(signature, cert_info[0]['key'])
+#>        print(len(d), d.hex())
+#>        print(d)
+
+    def extract_cert_info(self):
+        certs = []
+        for ce in self.client.certificates:
+            cert = self.extract_single(ce)
+            certs.append(cert)
+        return certs
+
+    def extract_single(self, ce):
+        if isinstance(ce, bytes):
+            entry = CertificateEntry(0)
+            entry.unpack(ce)
+            ce = entry
+        info = ce.get_cert_info()
+        exts = info['extensions']
+        alt_subjects = {info['subject']['commonName']}
+        for ext in exts:
+            if ext['name'] == 'subjectAltName':
+                for sub in ext['value']:
+                    alt_subjects.add(sub['value'])
+        c = Asn1.from_ber(ce.cert_data)
+        c.process_encapsulated(selector=[0,6,1])
+        t = c[0]
+        key = t[6][1][0]
+        cert = {
+            'key': {
+                'size': key[0].value.bit_length(),
+                'n': key[0].value,
+                'e': key[1].value,
+            },
+            'tbsc': t._ber,
+            'issuer': self.extractInfo(t[3]),
+            'subject': self.extractInfo(t[5]),
+            'notBefore': t[4][0].value,
+            'notAfter': t[4][1].value,
+            'algorithm': c[1],
+            'signature': c[2]._raw[1:], # BIT STRING
+            'subjects': alt_subjects,
+        }
+        return cert
+
+    def extractInfo(self, obj):
+        info = {}
+        for s in obj:
+            info[s[0][0].oid_name] = s[0][1].value
+        text = info.get('countryName', '-') + '/' + \
+            info.get('organizationName', '-') + '/' + \
+            info.get('commonName', '-');
+        return text
+
+    def digest(self, m, alg):
+        return hashlib.sha256(m).digest()
+
+    def decrypt_signature(self, ed, pubkey):
+        rsa = Rsa()
+        d = rsa._decrypt(RsaKey(pubkey['size'], pubkey['n'], pubkey['e']), ed)
+        return d
+
+    def decode(self, d):
+        obj = Asn1.from_ber(d)
+        return obj[1].data
 
 def simplify(obj):
     if isinstance(obj, (int, bool, str, type(None))):
@@ -111,6 +244,11 @@ def get_args():
 
     parser.add_argument('-c', '--show-certificates', action='store_true', help = """
         Display server certificate information
+    """)
+    parser.add_argument('-v', '--verify-certificates', action='store_true', help = """
+        Verify server certificates and certification signsture. Verifies
+        validity, signatures, certification order and server information.
+        Signature chain is also shown.
     """)
     parser.add_argument('-p', '--show-parameters', action='store_true', help = """
         Display TLS connection parametrs
@@ -135,6 +273,12 @@ def get_args():
         (Default: %(default)s).
     """)
 #>    parser.add_argument('-v', '--verbose', action='store_true')  # on/off flag
+
+    parser.add_argument('--cert-dir', metavar='DIR', default='/usr/lib/ssl/certs', help="""
+        Directory containing certificate pem files. (Default: "%(default)s")
+    """)
+    # alternative '/etc/ssl/certs'. '/usr/lib/ssl/certs' is a link to it, but 
+    # this contains also links to certs
 
     parser.add_argument('--debug', action='store_true', help=argparse.SUPPRESS)
 
