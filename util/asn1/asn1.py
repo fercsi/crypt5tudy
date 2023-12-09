@@ -50,6 +50,7 @@ class Asn1:
     @staticmethod
     def _from_ber(raw: bytes, pos: int = 0):
         asn1_type = raw[pos]
+        spos = pos
         pos += 1
         constructed = (asn1_type & 0x20) != 0
         type_class = asn1_type >> 6
@@ -65,11 +66,11 @@ class Asn1:
             pos += ll
         data = raw[pos:pos+length]
         pos += length
-        content = Asn1._process_type(asn1_type, constructed, type_class, data)
+        content = Asn1._process_type(asn1_type, constructed, type_class, data, raw[spos:pos])
         return content, pos
 
     @staticmethod
-    def _process_type(asn1_type: int, constructed: bool, type_class: int, data: bytes):
+    def _process_type(asn1_type: int, constructed: bool, type_class: int, data: bytes, ber: bytes):
         # TODO: understand Context-specific behaviour. e.g. EOC
 #>        if type_class & 1: # class 0, 2 fall through
         if type_class != 0: # class 0, 2 fall through
@@ -81,5 +82,6 @@ class Asn1:
         content._constructed = constructed
         content._class = type_class
         content._raw = data
+        content._ber = ber
         content.from_ber(data)
         return content
