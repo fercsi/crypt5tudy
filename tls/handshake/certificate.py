@@ -44,9 +44,12 @@ class Certificate(Handshake):
         while pos < endpos:
             entry = CertificateEntry(self.certificate_type)
             start = pos
+            rawcert = unpack_bytes(raw, pos, 3)
+            entry.unpack(rawcert)
             pos += 3 + unpack_u24(raw, pos)
+            entry.extensions = unpack_extension_list(raw, pos,
+                                        HandshakeType.certificate, lensize=2)
             pos += 2 + unpack_u16(raw, pos)
-            entry.unpack(raw[start:pos])
             self.certificate_entries.append(entry)
 
     def represent(self, level: int = 0):
@@ -79,15 +82,11 @@ class CertificateEntry:
         packed = content + exts
         return packed
 
-    def unpack(self, raw: bytes) -> None:
-        content = unpack_bytes(raw, 0, 3)
+    def unpack(self, cert: bytes) -> None:
         if self.certificate_type == 0:
-            self.cert_data = content
+            self.cert_data = cert
         else:
-            self.key_info = content
-        pos = 3 + len(content)
-        self.extensions = unpack_extension_list(raw, pos,
-                                        HandshakeType.certificate, lensize=2)
+            self.key_info = cert
 
     def get_cert_info(self):
         obj = self.get_cert_object()
