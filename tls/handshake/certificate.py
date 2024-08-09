@@ -111,10 +111,26 @@ class CertificateEntry:
             value = seq[0][1].value
             subject[name] = value
         info['subject'] = subject
+        algorithm = self._process_algorithm(tbsc[6][0])
+        if algorithm['algorithm'] == 'rsaEncryption':
+            pubkey = {
+                'n': tbsc[6][1][0][0].value,
+                'e': tbsc[6][1][0][1].value,
+            }
+        elif algorithm['algorithm'] == 'ecPublicKey':
+            data = tbsc[6][1].data
+            size = len(data) >> 1
+            pubkey = {
+                'x': int.from_bytes(data[1:1+size]),
+                'y': int.from_bytes(data[1+size:]),
+            }
+        else:
+            pubkey = tbsc[6][1].represent()
         info['subjectPublicKeyInfo'] = {
-            'algorithm': self._process_algorithm(tbsc[6][0]),
-            'subjectPublicKey': None, #TODO
+            'algorithm': algorithm,
+            'subjectPublicKey': pubkey
         }
+
         for obj in tbsc[7:]:
             type_id = obj.info().type_id
             if type_id == 1: # issuerUniqueID
