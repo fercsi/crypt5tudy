@@ -168,7 +168,12 @@ class Client(Connect):
             ])
         ch.add_extension(e)
         e = tls.SignatureAlgorithms([
-            'RSA-PSS-RSAE-SHA256'
+            'RSA-PSS-RSAE-SHA256',
+#>            'RSA-PSS-RSAE-SHA384',
+#>            'RSA-PSS-RSAE-SHA512',
+            'ECDSA-SECP256R1-SHA256',
+#>            'ECDSA-SECP384R1-SHA384',
+#>            'ECDSA-SECP521R1-SHA512',
             ])
         ch.add_extension(e)
         e = tls.SupportedVersions([
