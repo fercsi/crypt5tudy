@@ -1,0 +1,1 @@
+pip install --find-links https://www.obj-sys.com/PythonRuntime --no-deps osyspyrt
