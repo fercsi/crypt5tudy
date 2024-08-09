@@ -138,12 +138,16 @@ class Tool:
             if issci['subject'] != subci['issuer']:
                 ok = False
                 print('    Invalid certificate chain')
+            pubktype = issci['pubkey_type']
             calchash = self.digest(subci['tbsc'], 'sha256')
-            d = self.decrypt_signature(subci['signature'], issci['key'])
-            decrhash = self.decode(d)
-            if calchash != decrhash:
-                ok = False
-                print('    Signature error')
+            if pubktype == 'rsaEncryption':
+                d = self.decrypt_signature(subci['signature'], issci['pubkey'])
+                decrhash = self.decode(d)
+                if calchash != decrhash:
+                    ok = False
+                    print('    Signature error')
+            elif pubktype == 'ecPublicKey':
+                print(issci['pubkey']['x'].bit_length())
             subci = issci
         if ok:
             print('    OK')
@@ -154,13 +158,82 @@ class Tool:
             print('    Certificate subject does not match hostname')
         print('Verifying TLS certificate signature')
         print('    Not implemented')
+        algorithm = self.client.certificateVerify.algorithm
+        signature = self.client.certificateVerify.signature
+        if algorithm & 0xff == 3:
+            pubkey_type = 'ecdsa'
+        elif algorithm & 0xff in (7,8):
+            pubkey_type = 'eddsa'
+        else:
+            pubkey_type = 'rsa'
+        print(pubkey_type)
+        # RSA-PSS-RSAE-SHA256: RSA-PSS w/ SHA256 encoded with rsaEncryption in certificate
+        # RSA-PSS-PSS-SHA256: RSA-PSS w/ SHA256 encoded with id-RSASSA-PSS in certificate
+        # RFC8017 8.1: RSASSA-PSS
+        #   algos: RFC2437
+        # RFC4054 1.2: RSA Public keys
 #>        raw = self.client.certificate.raw_content
-#>        algorithm = self.client.certificateVerify.algorithm
-#>        signature = self.client.certificateVerify.signature
+#>        M = b'Hello World!'
+            # 'client' for client certificate!
+        M = b' ' * 64 \
+          + b"TLS 1.3, server CertificateVerify" \
+          + b'\0' \
+          + self.client.certificateVerifyTranscriptHash
+#>        + transcriptHash
+        print('M', len(M), M.hex())
+        import hashlib
+        mHash = hashlib.sha256(M).digest()
+#>        mHash = self.client.certificateVerifyTranscriptHash
+        print('mHash', len(mHash), mHash.hex())
+        # 3. EMSA-PSS verification
 #>        print(len(signature), signature.hex())
-#>        d = self.decrypt_signature(signature, cert_info[0]['key'])
+        EM = self.decrypt_signature(signature, cert_info[0]['pubkey'])
 #>        print(len(d), d.hex())
+#>        print(256, cert_info[0]['pubkey']['n'].to_bytes(256).hex())
 #>        print(d)
+        maskedDB = EM[:-33]
+        H = EM[-33:-1]
+        bc = EM[-1:]
+        print('maskedDB', len(maskedDB), maskedDB.hex())
+        print('H', len(H), H.hex())
+        print('0xbc', len(bc), bc.hex())
+        dbMask = self.mgf1(H, len(maskedDB))
+        db = bytes(x^y for x,y in zip(maskedDB, dbMask))
+        print('dbMask', len(dbMask), dbMask.hex())
+        print('db', len(db), db.hex())
+        print('0x01', 1, db[-33:-32].hex())
+        salt = db[-32:]
+        print('salt', len(salt), salt.hex())
+        Mx = b'\0' * 8 + mHash + salt
+        Hx = hashlib.sha256(Mx).digest()
+        print('M\'', len(Mx), Mx.hex())
+        print('H\'', len(Hx), Hx.hex())
+        print('H', len(H), H.hex())
+#>        print('d', len(d), d.hex())
+
+    import hashlib
+
+    def mgf1(self, seed: bytes, length: int, hash_func=hashlib.sha256) -> bytes:
+        """Mask generation function."""
+        hLen = hash_func().digest_size
+        # https://www.ietf.org/rfc/rfc2437.txt
+        # 1. If l > 2^32(hLen), output "mask too long" and stop.
+        if length > (hLen << 32):
+            raise ValueError("mask too long")
+        # 2. Let T be the empty octet string.
+        T = b""
+        # 3. For counter from 0 to \lceil{l / hLen}\rceil-1, do the following:
+        # Note: \lceil{l / hLen}\rceil-1 is the number of iterations needed,
+        #       but it's easier to check if we have reached the desired length.
+        counter = 0
+        while len(T) < length:
+            # a. Convert counter to an octet string C of length 4 with the primitive I2OSP: C = I2OSP (counter, 4)
+            C = int.to_bytes(counter, 4, "big")
+            # b. Concatenate the hash of the seed Z and C to the octet string T: T = T || Hash (Z || C)
+            T += hash_func(seed + C).digest()
+            counter += 1
+        # 4. Output the leading l octets of T as the octet string mask.
+        return T[:length]
 
     def extract_cert_info(self):
         certs = []
@@ -181,16 +254,24 @@ class Tool:
             if ext['name'] == 'subjectAltName':
                 for sub in ext['value']:
                     alt_subjects.add(sub['value'])
+        pubkey = info['subjectPublicKeyInfo']['subjectPublicKey'].copy()
+        if 'n' in pubkey:
+            pubkey['size'] = pubkey['n'].bit_length()
+        elif 'x' in pubkey:
+            if pubkey['x'].bit_length() <= 256:
+                pubkey['size'] = 256
+            elif pubkey['x'].bit_length() <= 384:
+                pubkey['size'] = 384
+            else:
+                pubkey['size'] = 521
         c = Asn1.from_ber(ce.cert_data)
         c.process_encapsulated(selector=[0,6,1])
         t = c[0]
         key = t[6][1][0]
         cert = {
-            'key': {
-                'size': key[0].value.bit_length(),
-                'n': key[0].value,
-                'e': key[1].value,
-            },
+            'info': info,
+            'pubkey_type': info['subjectPublicKeyInfo']['algorithm']['algorithm'],
+            'pubkey': pubkey,
             'tbsc': t._ber,
             'issuer': self.extractInfo(t[3]),
             'subject': self.extractInfo(t[5]),
