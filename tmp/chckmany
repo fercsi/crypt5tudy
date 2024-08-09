@@ -1,0 +1,20 @@
+#!/bin/bash
+
+empty_hash=38b060a751ac96384cd9327eb1b1e36a21fdb71114be07434c0cc7bf63f6e1da274edebfe76f65fbd51ad2f14898b95b
+shared_secret=df4a291baa1eb7cfa6934b29b474baad2697e29f1f920dcc77c8a0a088447624
+
+function try() {
+    nullkey=$1
+    echo $nullkey
+    early_secret=$(./hkdf-384.sh extract 00 $nullkey)
+    derived_secret=$(./hkdf-384.sh expandlabel $early_secret derived $empty_hash 48)
+    handshake_secret=$(./hkdf-384.sh extract $derived_secret $shared_secret)
+    echo $handshake_secret
+}
+
+nullkey = ''
+for i in $(seq 49); do
+    try $nullkey
+    nullkey=$nullkey"00"
+done
+
