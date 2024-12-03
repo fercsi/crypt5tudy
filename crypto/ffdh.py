@@ -33,4 +33,4 @@ class FFDH:
         if isinstance(my_priv, bytes):
             my_priv = unpack_uint(my_priv, 0, size)
         secret = pub_m ** my_priv
-        return pack_uint(secret, size)
+        return pack_uint(secret.value, size)
